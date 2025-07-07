@@ -281,6 +281,7 @@ if (citiesWithIssues.has(city.city)) {
     window.cityLookup[city.city.toLowerCase()] = city;
 
     
+    
     const chartSection = laCities.includes(city.city) ? document.getElementById('louisiana-container') :
                         msCities.includes(city.city) ? document.getElementById('mississippi-container') :
                         scCities.includes(city.city) ? document.getElementById('sc-container') :
@@ -289,6 +290,7 @@ if (citiesWithIssues.has(city.city)) {
                         flCities.includes(city.city) ? document.getElementById('fl-container') :
                         orCities.includes(city.city) ? document.getElementById('or-container') :
                         null;
+
 
 
     chartSection?.appendChild(div);
