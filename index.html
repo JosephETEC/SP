@@ -280,9 +280,16 @@ if (citiesWithIssues.has(city.city)) {
 
     window.cityLookup[city.city.toLowerCase()] = city;
 
-    const chartSection = ['Bayou Liberty', 'Hessmer', 'Homer', 'Lake Charles', 'Shreveport', 'Westwego'].includes(city.city)
-      ? document.getElementById('louisiana-container')
-      : document.getElementById('mississippi-container');
+    
+    const chartSection = laCities.includes(city.city) ? document.getElementById('louisiana-container') :
+                        msCities.includes(city.city) ? document.getElementById('mississippi-container') :
+                        scCities.includes(city.city) ? document.getElementById('sc-container') :
+                        ncCities.includes(city.city) ? document.getElementById('nc-container') :
+                        nmCities.includes(city.city) ? document.getElementById('nm-container') :
+                        flCities.includes(city.city) ? document.getElementById('fl-container') :
+                        orCities.includes(city.city) ? document.getElementById('or-container') :
+                        null;
+
 
     chartSection?.appendChild(div);
 
