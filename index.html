@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Kamstrup Dynamic Dashboard</title>
+  <title>SP - Kamstrup Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
@@ -15,7 +15,7 @@
       text-align: center;
     }
     header {
-      height: 100px;
+      height: 75px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -55,7 +55,7 @@
       padding: 20px;
     }
     .city-card {
-      width: 180px;
+      width: 200px;
       height: 180px;
       background: white;
       border-radius: 12px;
@@ -75,9 +75,6 @@
 <body>
   <header>
     <h1>Kamstrup Health Report</h1>
-<div id="stateList" style="font-size: 1em; margin-top: 5px; color: #e0e0e0;"></div>
-  </header>
-  <div id="report-dates-box"></div>
   <script>
     const cityLookup = {};
 
