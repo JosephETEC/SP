@@ -109,23 +109,24 @@ map.on('load', () => {
   });
 });</script>
 
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vSV38dO4UHsnXyLVAho45wIjgyoQXI3geoEmhKeyU_OFLbRu3PQi1s9SOtKRvQPSMFTxrjL0obEQqBZ/pub?gid=0&single=true&output=csv&t=" + new Date().getTime(), {
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=0&single=true&output=csv&t=" + new Date().getTime(), {
     download: true,
     header: true,
     complete: function(results) {
       const nav = document.getElementById('dynamic-nav');
-      const cities = results.data;
+      const rows = results.data;
       const added = new Set();
 
-      cities.forEach(row => {
+      rows.forEach(row => {
         const city = row.City?.trim();
-        const link = row["Page Link"]?.trim();
+        const page = row["Page Link"]?.trim() || city?.toLowerCase().replace(/\s+/g, '-') + ".html";
         const sheetState = row.State?.trim().toLowerCase();
-        if (city && link && sheetState === "mississippi" && !added.has(city.toLowerCase())) {
+        if (city && sheetState === "mississippi" && !added.has(city.toLowerCase())) {
           const a = document.createElement('a');
-          a.href = link;
+          a.href = page;
           a.textContent = city;
           a.style = "color: white; text-decoration: none; font-weight: 500;";
           nav.appendChild(a);
