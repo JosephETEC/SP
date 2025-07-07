@@ -282,14 +282,16 @@ if (citiesWithIssues.has(city.city)) {
 
     
     
-    const chartSection = laCities.includes(city.city) ? document.getElementById('louisiana-container') :
-                        msCities.includes(city.city) ? document.getElementById('mississippi-container') :
-                        scCities.includes(city.city) ? document.getElementById('sc-container') :
-                        ncCities.includes(city.city) ? document.getElementById('nc-container') :
-                        nmCities.includes(city.city) ? document.getElementById('nm-container') :
-                        flCities.includes(city.city) ? document.getElementById('fl-container') :
-                        orCities.includes(city.city) ? document.getElementById('or-container') :
+    
+    const chartSection = laCities.map(c => c.toLowerCase()).includes(city.city.toLowerCase()) ? document.getElementById('louisiana-container') :
+                        msCities.map(c => c.toLowerCase()).includes(city.city.toLowerCase()) ? document.getElementById('mississippi-container') :
+                        scCities.map(c => c.toLowerCase()).includes(city.city.toLowerCase()) ? document.getElementById('sc-container') :
+                        ncCities.map(c => c.toLowerCase()).includes(city.city.toLowerCase()) ? document.getElementById('nc-container') :
+                        nmCities.map(c => c.toLowerCase()).includes(city.city.toLowerCase()) ? document.getElementById('nm-container') :
+                        flCities.map(c => c.toLowerCase()).includes(city.city.toLowerCase()) ? document.getElementById('fl-container') :
+                        orCities.map(c => c.toLowerCase()).includes(city.city.toLowerCase()) ? document.getElementById('or-container') :
                         null;
+
 
 
 
