@@ -55,14 +55,13 @@ map.on('load', () => {
             const lat = parseFloat(row.Latitude);
             const lon = parseFloat(row.Longitude);
             const city = row.City?.trim().toLowerCase();
-            const state = row.State?.trim().toLowerCase();
             const displayName = row.City;
             const link = row["Page Link"] || "#";
             const matching = collectorData.filter(c =>
-              c["City"]?.trim().toLowerCase() === city && c["Collector Issue"] !== undefined
+              c["City"]?.trim().toLowerCase() === city
             );
             const hasIssue = matching.some(m => m["Collector Issue"]?.trim().toLowerCase() === "yes");
-            if (!isNaN(lat) && !isNaN(lon) && state === "louisiana") {
+            if (!isNaN(lat) && !isNaN(lon)) {
               const status = hasIssue ? "Offline" : "Online";
               addMarker(lat, lon, `<a href='${link}'>${displayName}</a><br>Status: ${status}`, !hasIssue);
               validCount++;
