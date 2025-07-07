@@ -40,7 +40,7 @@ function addMarker(lat, lon, popupHTML, isOnline) {
   bounds.extend([lon, lat]);
 }
 map.on('load', () => {
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=941359224&single=true&output=csv", {
     download: true,
     header: true,
     complete: function(collectorResults) {
@@ -50,6 +50,7 @@ map.on('load', () => {
         header: true,
         complete: function(locationResults) {
           const locations = locationResults.data;
+          let validCount = 0;
           locations.forEach(row => {
             const lat = parseFloat(row.Latitude);
             const lon = parseFloat(row.Longitude);
@@ -64,9 +65,14 @@ map.on('load', () => {
             if (!isNaN(lat) && !isNaN(lon) && state === "louisiana") {
               const status = hasIssue ? "Offline" : "Online";
               addMarker(lat, lon, `<a href='${link}'>${displayName}</a><br>Status: ${status}`, !hasIssue);
+              validCount++;
             }
           });
-          map.fitBounds(bounds, { padding: 100 });
+          if (validCount > 0) {
+            map.fitBounds(bounds, { padding: 100 });
+          } else {
+            alert("No valid city markers found for Louisiana.");
+          }
         }
       });
     }
