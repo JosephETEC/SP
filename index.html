@@ -1,43 +1,5 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
 
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
@@ -45,20 +7,6 @@
   <title>SP - Kamstrup Health Report</title>
   <link rel="manifest" href="manifest.json"/>
   <meta name="theme-color" content="#2c5782"/>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    window.addEventListener('DOMContentLoaded', () => {
-      const now = new Date('2025-07-08T19:02:00-05:00'); // 02:02 PM CDT
-      const start = new Date(now);
-      start.setDate(now.getDate() - 3); // 07/05/2025
-      const end = new Date(now);
-      end.setDate(now.getDate() - 1);   // 07/07/2025
-
-      document.getElementById('report-date').textContent = now.toLocaleDateString('en-US', { timeZone: 'America/Chicago' });
-      document.getElementById('start-date').textContent = start.toLocaleDateString('en-US', { timeZone: 'America/Chicago' });
-      document.getElementById('end-date').textContent = end.toLocaleDateString('en-US', { timeZone: 'America/Chicago' });
-    });
-  </script>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -99,9 +47,15 @@
       margin: 5px 0;
       transition: all 0.3s ease;
     }
-    .menu-open .hamburger div:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
-    .menu-open .hamburger div:nth-child(2) { opacity: 0; }
-    .menu-open .hamburger div:nth-child(3) { transform: rotate(-45deg) translate(6px, -6px); }
+    .menu-open .hamburger div:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+    .menu-open .hamburger div:nth-child(2) {
+      opacity: 0;
+    }
+    .menu-open .hamburger div:nth-child(3) {
+      transform: rotate(-45deg) translate(6px, -6px);
+    }
     .menu {
       position: fixed;
       top: 0;
@@ -113,7 +67,9 @@
       transition: left 0.3s ease;
       z-index: 1000;
     }
-    .menu-open .menu { left: 0; }
+    .menu-open .menu {
+      left: 0;
+    }
     .menu a {
       display: block;
       color: white;
@@ -121,7 +77,9 @@
       text-decoration: none;
       font-size: 16px;
     }
-    .menu a:hover { background-color: #1a3a5e; }
+    .menu a:hover {
+      background-color: #1a3a5e;
+    }
     .content {
       margin-top: 60px;
       padding: 20px;
@@ -134,11 +92,14 @@
     }
     .region-header {
       background-color: #dce9f6;
-      padding: 10px;
+      padding: 10px 0;
       font-size: 2em;
       font-weight: bold;
       border-top: 2px solid #2c5782;
       margin-top: 40px;
+      width: 100vw;
+      margin-left: -20px;
+      box-sizing: border-box;
     }
     .performance-container {
       display: flex;
@@ -165,14 +126,6 @@
       transform: scale(1.05);
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     }
-    canvas.donut {
-      max-width: 80px;
-      max-height: 80px;
-      margin-top: 8px;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-    }
     .collector-box {
       margin: 20px auto;
       max-width: 900px;
@@ -189,327 +142,110 @@
     .collector-box h2 {
       margin-top: 0;
     }
-    .footer-bar {
-      text-align: center;
-      padding: 20px;
-    }
-    .footer-bar button {
-      padding: 10px 20px;
-      font-weight: bold;
-      border: 2px solid #2c5782;
-      background: #e0f3ff;
-      cursor: pointer;
-      margin-bottom: 10px;
-    }
-    .footer-bar a {
-      display: inline-block;
-      margin-bottom: 10px;
-      text-decoration: none;
-      color: #2c5782;
-      font-size: 0.9em;
-    }
-    .blinking-alert {
-      font-size: 1.5em;
-      margin-top: 4px;
-      animation: blink 1s step-start 0s infinite;
-    }
-    @keyframes blink {
-      50% { opacity: 0; }
-    }
-    @media print {
-      @page {
-        size: landscape;
-        margin: 0.3in;
-      }
-      body {
-        zoom: 60%;
-        margin: 0;
-      }
-      header, .footer-bar, button, .menu { display: none !important; }
-      .performance-container { page-break-inside: avoid; }
-      .collector-box, .region-header, .performance-container { break-inside: avoid; }
-      #cityModal, #modalBackdrop { display: none !important; }
-      .blinking-alert { animation: none !important; opacity: 1 !important; }
-    }
   </style>
 </head>
 <body>
-  <div class="hamburger">
-    <div></div>
-    <div></div>
-    <div></div>
-  </div>
-  <header>
-    <h1>SP - Kamstrup Health Report</h1>
-  </header>
+  <div class="hamburger"><div></div><div></div><div></div></div>
+  <header><h1>SP - Kamstrup Health Report</h1></header>
   <div class="menu">
-    <a href="index.html">Home</a>
-    <a href="overview.html">Overview</a>
-    <a href="louisiana.html">Louisiana</a>
-    <a href="mississippi.html">Mississippi</a>
-    <a href="florida.html">Florida</a>
-    <a href="new-mexico.html">New Mexico</a>
-    <a href="north-carolina.html">North Carolina</a>
-    <a href="oregon.html">Oregon</a>
-    <a href="south-carolina.html">South Carolina</a>
+    <a href="#">Home</a>
+    <a href="#">Overview</a>
+    <a href="#">Louisiana</a>
+    <a href="#">Mississippi</a>
+    <a href="#">Florida</a>
+    <a href="#">New Mexico</a>
+    <a href="#">North Carolina</a>
+    <a href="#">Oregon</a>
+    <a href="#">South Carolina</a>
   </div>
   <div class="content">
-    <div class="report-dates" id="report-dates-box">
+    <div class="report-dates">
       Report Date: <span id="report-date"></span><br/>
       Start Date: <span id="start-date"></span><br/>
       End Date: <span id="end-date"></span>
     </div>
 
-    <div class="region-header">Louisiana</div>
-    <div class="performance-container" id="louisiana-container"></div>
-    <div class="collector-box">
-      <h2>Collector Issues</h2>
-      <div id="collector-issues-content-la">Loading...</div>
-    </div>
-
-    <div class="region-header">Mississippi</div>
-    <div class="performance-container" id="mississippi-container"></div>
-    <div class="collector-box">
-      <h2>Collector Issues</h2>
-      <div id="collector-issues-content-ms">Loading...</div>
-    </div>
-
-    <div class="region-header">Florida</div>
-    <div class="performance-container" id="florida-container"></div>
-    <div class="collector-box">
-      <h2>Collector Issues</h2>
-      <div id="collector-issues-content-fl">Loading...</div>
-    </div>
-
-    <div class="region-header">New Mexico</div>
-    <div class="performance-container" id="new-mexico-container"></div>
-    <div class="collector-box">
-      <h2>Collector Issues</h2>
-      <div id="collector-issues-content-nm">Loading...</div>
-    </div>
-
-    <div class="region-header">North Carolina</div>
-    <div class="performance-container" id="north-carolina-container"></div>
-    <div class="collector-box">
-      <h2>Collector Issues</h2>
-      <div id="collector-issues-content-nc">Loading...</div>
-    </div>
-
-    <div class="region-header">Oregon</div>
-    <div class="performance-container" id="oregon-container"></div>
-    <div class="collector-box">
-      <h2>Collector Issues</h2>
-      <div id="collector-issues-content-or">Loading...</div>
-    </div>
-
-    <div class="region-header">South Carolina</div>
-    <div class="performance-container" id="south-carolina-container"></div>
-    <div class="collector-box">
-      <h2>Collector Issues</h2>
-      <div id="collector-issues-content-sc">Loading...</div>
-    </div>
-
-    <div class="footer-bar">
-      <button onclick="fetchChartData()">Refresh Dashboard Data</button><br/>
-      <a href="https://docs.google.com/spreadsheets/d/1ty-vhb5k6FS6InlZp9CcGnwoizEdmyMz-IcPXg67tVU/edit?gid=0#gid=0" target="_blank">Edit Performance Data in Google Sheets</a>
-    </div>
+    <div id="regions"></div>
   </div>
 
-  <div id="cityModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
-    background:white; padding:20px; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.3); z-index:1000; width:320px; 
-    text-align:center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color:#2c5782;">
-    <h2 id="modalCityName" style="margin-top:0; font-size:1.6em; font-weight:bold;"></h2>
-    <p style="margin:8px 0;"><strong>Reading Performance:</strong><br/><span id="modalPerformance" style="font-size:1.3em;"></span>%</p>
-    <p style="margin:8px 0;"><strong>Total Meters:</strong><br/><span id="modalTotal"></span></p>
-    <p style="margin:8px 0;"><strong>Missing Reads:</strong><br/><span id="modalMissing"></span></p>
-    <button onclick="closeCityModal()" style="margin-top:12px; padding:10px 20px; font-weight:bold; border-radius:8px;
-      border: 2px solid #2c5782; background: #e0f3ff; cursor:pointer;">Close</button>
-  </div>
-  <div id="modalBackdrop" onclick="closeCityModal()" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh;
-    background:rgba(0,0,0,0.5); z-index:999;"></div>
-
-  <div style="text-align:center; margin-bottom: 20px;">
-    <button onclick="window.print()" style="padding: 10px 20px; font-weight: bold; border: 2px solid #2c5782; background: #e0f3ff; cursor: pointer;">
-      Print / Export to PDF
-    </button>
-  </div>
   <script>
+    const STATE_SHEET_MAP = {
+      'louisiana': '941359224',
+      'mississippi': '521732964',
+      'florida': '1029939349',
+      'new-mexico': '958567876',
+      'north-carolina': '1551628257',
+      'oregon': '1386330678',
+      'south-carolina': '1264863021'
+    };
+
+    const baseSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid={GID}&single=true&output=csv';
+
+    async function fetchCSV(url) {
+      const res = await fetch(url);
+      const text = await res.text();
+      const rows = text.trim().split('\n').map(row => row.split(','));
+      return rows;
+    }
+
+    async function fetchCollectorIssues() {
+      const regions = document.getElementById('regions');
+      for (const [state, gid] of Object.entries(STATE_SHEET_MAP)) {
+        const sheetUrl = baseSheetUrl.replace('{GID}', gid);
+        const rows = await fetchCSV(sheetUrl);
+        const headers = rows[0];
+        const data = rows.slice(1);
+
+        const regionHeader = document.createElement('div');
+        regionHeader.className = 'region-header';
+        regionHeader.textContent = state.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        regions.appendChild(regionHeader);
+
+        const container = document.createElement('div');
+        container.className = 'performance-container';
+        regions.appendChild(container);
+
+        const collectorBox = document.createElement('div');
+        collectorBox.className = 'collector-box';
+        const issuesDiv = document.createElement('div');
+        collectorBox.innerHTML = '<h2>Collector Issues</h2>';
+        collectorBox.appendChild(issuesDiv);
+        regions.appendChild(collectorBox);
+
+        let issuesHtml = '';
+        let hasCollectorIssues = false;
+
+        data.forEach(row => {
+          const city = row[0];
+          const performance = row[1];
+          const collectorName = row[4];
+          const serial = row[5];
+          const lastContact = row[6];
+          const issue = row[7]?.toLowerCase() === 'yes';
+          const comment = row[8] || '';
+
+          const card = document.createElement('div');
+          card.className = 'city-card';
+          card.innerHTML = `<div><strong>${city}</strong></div><div>${performance}%</div>`;
+          container.appendChild(card);
+
+          if (issue) {
+            hasCollectorIssues = true;
+            issuesHtml += `<p><strong>${collectorName}</strong> (${serial}) - Last Contact: ${lastContact}<br/>${comment}</p>`;
+          }
+        });
+
+        issuesDiv.innerHTML = hasCollectorIssues ? issuesHtml : 'No collector issues reported.';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchCollectorIssues();
+    });
+
     document.querySelector('.hamburger').addEventListener('click', () => {
       document.body.classList.toggle('menu-open');
     });
-
-    const citiesWithIssues = new Set();
-
-    
-const sheetUrls = {
-  "Louisiana": "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=941359224&single=true&output=csv",
-  "Mississippi": "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=521732964&single=true&output=csv",
-  "Florida": "",
-  "New Mexico": "",
-  "North Carolina": "",
-  "Oregon": "",
-  "South Carolina": ""
-};
-
-const stateCodes = {
-  "Louisiana": "la",
-  "Mississippi": "ms",
-  "Florida": "fl",
-  "New Mexico": "nm",
-  "North Carolina": "nc",
-  "Oregon": "or",
-  "South Carolina": "sc"
-};
-
-async function fetchCollectorIssues() {
-  for (const [state, url] of Object.entries(sheetUrls)) {
-    const contentId = `collector-issues-content-${stateCodes[state]}`;
-    const container = document.getElementById(contentId);
-    if (!url || !container) {
-      if (container) {
-        container.innerHTML = "<p>Data not available.</p>";
-      }
-      continue;
-    }
-
-    try {
-      const response = await fetch(url);
-      const text = await response.text();
-      const rows = text.trim().split('
-').map(r => r.split(','));
-      const headers = rows[0];
-      const data = rows.slice(1).map(row => {
-        const obj = {};
-        headers.forEach((h, i) => obj[h.trim()] = row[i] ? row[i].trim() : '');
-        if (obj["Collector Issue"]?.toLowerCase() === "yes") {
-          citiesWithIssues.add(obj.City);
-        }
-        return obj;
-      });
-
-      const issues = data.filter(e => e["Collector Issue"]?.toLowerCase() === "yes");
-      if (issues.length > 0) {
-        container.innerHTML = issues.map(e =>
-          `<p><strong>${e.City}:</strong> ${e["Collector Name"]}, S/N: ${e["Serial Number"]}, Last Contact: ${e["Last Contact"]}, Comments: ${e.Comments}</p>`
-        ).join('');
-      } else {
-        container.innerHTML = "<p>No collector issues reported.</p>";
-      }
-    } catch (err) {
-      console.error(`Failed to load ${state} data:`, err);
-      container.innerHTML = "<p>Error loading data.</p>";
-    }
-  }
-}
-
-
-async function fetchChartData() {
-      document.getElementById('louisiana-container').innerHTML = '';
-      document.getElementById('mississippi-container').innerHTML = '';
-      document.getElementById('florida-container').innerHTML = '';
-      document.getElementById('new-mexico-container').innerHTML = '';
-      document.getElementById('north-carolina-container').innerHTML = '';
-      document.getElementById('oregon-container').innerHTML = '';
-      document.getElementById('south-carolina-container').innerHTML = '';
-
-      const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=0&single=true&output=csv");
-      const text = await response.text();
-      const allRows = text.trim().split('\n');
-      const headers = allRows[0].split(',');
-      const rows = allRows.slice(1).map(row => {
-        const cols = row.split(',');
-        return {
-          state: cols[headers.indexOf('State')]?.trim(),
-          city: cols[headers.indexOf('City')]?.trim(),
-          performance: parseFloat(cols[headers.indexOf('Performance (%)')]?.trim()) || 0
-        };
-      }).filter(row => row.state && row.city && !isNaN(row.performance));
-
-      window.cityLookup = {};
-
-      rows.forEach(row => {
-        const div = document.createElement('div');
-        div.className = 'city-card';
-        if (citiesWithIssues.has(row.city)) {
-          div.style.backgroundColor = '#ffdddd';
-        }
-        div.onclick = () => showCityInfo(row.city);
-        div.innerHTML = `<div><strong style="font-size: 1.4em;">${row.city}</strong><br><span style="font-weight:bold; display:block; margin-top: 4px;">${row.performance.toFixed(2)}%</span><canvas id="${row.city.toLowerCase().replace(/\s+/g, '')}Chart" class="donut"></canvas>${citiesWithIssues.has(row.city) ? '<div class="blinking-alert">⚠️</div>' : ''}</div>`;
-
-        window.cityLookup[row.city.toLowerCase()] = { city: row.city, performance: row.performance };
-
-        const section = row.state === 'Louisiana' ? document.getElementById('louisiana-container')
-          : row.state === 'Mississippi' ? document.getElementById('mississippi-container')
-          : row.state === 'Florida' ? document.getElementById('florida-container')
-          : row.state === 'New Mexico' ? document.getElementById('new-mexico-container')
-          : row.state === 'North Carolina' ? document.getElementById('north-carolina-container')
-          : row.state === 'Oregon' ? document.getElementById('oregon-container')
-          : row.state === 'South Carolina' ? document.getElementById('south-carolina-container')
-          : null;
-
-        if (section) section.appendChild(div);
-
-        const canvas = document.getElementById(`${row.city.toLowerCase().replace(/\s+/g, '')}Chart`);
-        if (canvas) {
-          const ctx = canvas.getContext('2d');
-          new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-              datasets: [{
-                data: [row.performance, 100 - row.performance],
-                backgroundColor: ['#2c5782', '#ffa500'],
-                borderWidth: 0
-              }]
-            },
-            options: {
-              cutout: '50%',
-              responsive: true,
-              plugins: {
-                legend: { display: false },
-                tooltip: { enabled: false }
-              }
-            }
-          });
-        }
-      });
-    }
-
-    function showCityInfo(cityName) {
-      const city = window.cityLookup[cityName.toLowerCase()];
-      if (!city) return;
-      document.getElementById("modalCityName").textContent = city.city;
-      document.getElementById("modalPerformance").textContent = city.performance.toFixed(2);
-      document.getElementById("modalTotal").textContent = 'N/A'; // Placeholder
-      document.getElementById("modalMissing").textContent = 'N/A'; // Placeholder
-      document.getElementById("cityModal").style.display = "block";
-      document.getElementById("modalBackdrop").style.display = "block";
-    }
-
-    function closeCityModal() {
-      document.getElementById("cityModal").style.display = "none";
-      document.getElementById("modalBackdrop").style.display = "none";
-    }
-
-    fetchCollectorIssues().then(fetchChartData);
   </script>
-
-  <div id="cityModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
-    background:white; padding:20px; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.3); z-index:1000; width:320px; 
-    text-align:center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color:#2c5782;">
-    <h2 id="modalCityName" style="margin-top:0; font-size:1.6em; font-weight:bold;"></h2>
-    <p style="margin:8px 0;"><strong>Reading Performance:</strong><br/><span id="modalPerformance" style="font-size:1.3em;"></span>%</p>
-    <p style="margin:8px 0;"><strong>Total Meters:</strong><br/><span id="modalTotal"></span></p>
-    <p style="margin:8px 0;"><strong>Missing Reads:</strong><br/><span id="modalMissing"></span></p>
-    <button onclick="closeCityModal()" style="margin-top:12px; padding:10px 20px; font-weight:bold; border-radius:8px;
-      border: 2px solid #2c5782; background: #e0f3ff; cursor:pointer;">Close</button>
-  </div>
-  <div id="modalBackdrop" onclick="closeCityModal()" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh;
-    background:rgba(0,0,0,0.5); z-index:999;"></div>
-
-  <div style="text-align:center; margin-bottom: 20px;">
-    <button onclick="window.print()" style="padding: 10px 20px; font-weight: bold; border: 2px solid #2c5782; background: #e0f3ff; cursor: pointer;">
-      Print / Export to PDF
-    </button>
-  </div>
 </body>
 </html>
