@@ -231,10 +231,11 @@
 
       const laCities = ['Hessmer', 'Lake Charles', 'Shreveport'];
       const msCities = ['Jackson', 'Okolona'];
+      const flCities = ['Lakeview'];
       const formatEntry = (e) => `<p><strong>${e.City}:</strong> ${e["Collector Name"]}, S/N: ${e["Serial Number"]}, Last Contact: ${e["Last Contact"]}, Comments: ${e.Comments}</p>`;
       const laIssues = data.filter(e => e["Collector Issue"] === "Yes" && laCities.includes(e.City));
 
-      const msResponse = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=11820546&single=true&output=csv");
+      const msResponse = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=521732964&single=true&output=csv");
       const msText = await msResponse.text();
       const msRows = msText.trim().split('\n').map(r => r.split(','));
       const msHeaders = msRows[0];
@@ -286,7 +287,7 @@
           ? document.getElementById('louisiana-container')
           : ['Jackson', 'Okolona'].includes(city.city)
             ? document.getElementById('mississippi-container')
-            : ['Tampa', 'Orlando', 'Miami'].includes(city.city) // Add your actual Florida cities here
+            : ['Lakeview'].includes(city.city)
               ? document.getElementById('florida-container')
               : null;
 
