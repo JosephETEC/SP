@@ -112,5 +112,16 @@
   <script>
     // JavaScript logic inserted here as needed
   </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  fetchCollectorIssues().then(fetchChartData);
+});
+
+document.querySelector('.hamburger').addEventListener('click', () => {
+  document.body.classList.toggle('menu-open');
+});
+</script>
+
 </body>
 </html>
