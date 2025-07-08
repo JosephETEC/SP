@@ -110,7 +110,7 @@
     }
     .city-card {
       width: 200px;
-      height: 200px;
+      height: 150px;
       background: white;
       border-radius: 16px;
       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
@@ -164,7 +164,6 @@
       Start Date: <span id="start-date"></span><br/>
       End Date: <span id="end-date"></span>
     </div>
-
     <div id="regions"></div>
   </div>
 
@@ -184,8 +183,7 @@
     async function fetchCSV(url) {
       const res = await fetch(url);
       const text = await res.text();
-      const rows = text.trim().split('\n').map(row => row.split(','));
-      return rows;
+      return text.trim().split('\n').map(row => row.split(','));
     }
 
     async function fetchCollectorIssues() {
@@ -214,26 +212,37 @@
 
         let issuesHtml = '';
         let hasCollectorIssues = false;
+        const cityMap = {};
 
         data.forEach(row => {
           const city = row[0];
-          const performance = row[1];
+          const performance = parseFloat(row[1]) || 0;
           const collectorName = row[4];
           const serial = row[5];
           const lastContact = row[6];
           const issue = row[7]?.toLowerCase() === 'yes';
           const comment = row[8] || '';
 
-          const card = document.createElement('div');
-          card.className = 'city-card';
-          card.innerHTML = `<div><strong>${city}</strong></div><div>${performance}%</div>`;
-          container.appendChild(card);
+          // Grouping data by city
+          if (!cityMap[city]) {
+            cityMap[city] = { totalPerf: 0, count: 0 };
+          }
+          cityMap[city].totalPerf += performance;
+          cityMap[city].count += 1;
 
           if (issue) {
             hasCollectorIssues = true;
             issuesHtml += `<p><strong>${collectorName}</strong> (${serial}) - Last Contact: ${lastContact}<br/>${comment}</p>`;
           }
         });
+
+        for (const city in cityMap) {
+          const avg = (cityMap[city].totalPerf / cityMap[city].count).toFixed(1);
+          const card = document.createElement('div');
+          card.className = 'city-card';
+          card.innerHTML = `<div><strong>${city}</strong></div><div>${avg}%</div>`;
+          container.appendChild(card);
+        }
 
         issuesDiv.innerHTML = hasCollectorIssues ? issuesHtml : 'No collector issues reported.';
       }
