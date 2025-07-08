@@ -181,7 +181,7 @@
 <a href="index.html">Home</a>
 <a href="louisiana.html">Louisiana</a>
 <a href="mississippi.html">Mississippi</a>
-<a href="southcarolina.html">South Carolina</a><a href="northcarolina.html">North Carolina</a><a href="newmexico.html">New Mexico</a><a href="florida.html">Florida</a><a href="oregon.html">Oregon</a></nav>
+</nav>
 </header>
 <h1>Kamstrup Health Report</h1>
 <div class="report-dates" id="report-dates-box">
@@ -195,7 +195,7 @@
 <h2>Collector Issues</h2>
 <div id="collector-issues-content-la">Loading...</div>
 </div>
-<div class="region-header">Mississippi</div><div class="region-header">South Carolina</div><div class="performance-container" id="sc-container"></div><div class="region-header">North Carolina</div><div class="performance-container" id="nc-container"></div><div class="region-header">New Mexico</div><div class="performance-container" id="nm-container"></div><div class="region-header">Florida</div><div class="performance-container" id="fl-container"></div><div class="region-header">Oregon</div><div class="performance-container" id="or-container"></div>
+<div class="region-header">Mississippi</div>
 <div class="performance-container" id="mississippi-container"></div>
 <div class="collector-box" style="text-align:center">
 <h2>Collector Issues</h2>
@@ -209,7 +209,7 @@
     const citiesWithIssues = new Set();
 
     async function fetchCollectorIssues() {
-      const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=96572475&single=true&output=csv");
+      const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv");
       const text = await response.text();
       const rows = text.trim().split('\n').map(r => r.split(','));
       const headers = rows[0];
@@ -219,19 +219,12 @@
         if (obj["Collector Issue"] === "Yes") citiesWithIssues.add(obj.City);
         return obj;
       });
-      const laCities = ["Hessmer", "Lake Charles", "Shreveport"];
-      const msCities = ["Okolona", "Jackson"];
-
-const scCities = ["Estill"];
-const ncCities = ["Salemburg"];
-const nmCities = ["Roosevelt County", "Jal", "Angel Fire"];
-const flCities = ["Sunnlakes"];
-const orCities = ["Lakeview"];
-
+      const laCities = ['Bayou Liberty', 'Hessmer', 'Homer', 'Lake Charles', 'Shreveport', 'Westwego'];
+      const msCities = ['Columbus', 'Diamondhead', 'Jackson', 'Moss Point', 'Okolona'];
       const formatEntry = (e) => `<p><strong>${e.City}:</strong> ${e["Collector Name"]}, S/N: ${e["Serial Number"]}, Last Contact: ${e["Last Contact"]}, Comments: ${e.Comments}</p>`;
       const laIssues = data.filter(e => e["Collector Issue"] === "Yes" && laCities.includes(e.City));
 
-      const msResponse = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=11820546&single=true&output=csv");
+      const msResponse = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=11820546&single=true&output=csv");
       const msText = await msResponse.text();
       const msRows = msText.trim().split('\n').map(r => r.split(','));
       const msHeaders = msRows[0];
@@ -252,7 +245,7 @@ async function fetchChartData() {
   document.getElementById('louisiana-container').innerHTML = '';
   document.getElementById('mississippi-container').innerHTML = '';
 
-  const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=0&single=true&output=csv");
+  const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=0&single=true&output=csv");
   const text = await response.text();
   const allRows = text.trim().split('\n');
   const rows = allRows.slice(1);
@@ -280,20 +273,9 @@ if (citiesWithIssues.has(city.city)) {
 
     window.cityLookup[city.city.toLowerCase()] = city;
 
-    
-    
-    
-    const chartSection = laCities.map(c => c.toLowerCase()).includes(city.city.toLowerCase()) ? document.getElementById('louisiana-container') :
-                        msCities.map(c => c.toLowerCase()).includes(city.city.toLowerCase()) ? document.getElementById('mississippi-container') :
-                        scCities.map(c => c.toLowerCase()).includes(city.city.toLowerCase()) ? document.getElementById('sc-container') :
-                        ncCities.map(c => c.toLowerCase()).includes(city.city.toLowerCase()) ? document.getElementById('nc-container') :
-                        nmCities.map(c => c.toLowerCase()).includes(city.city.toLowerCase()) ? document.getElementById('nm-container') :
-                        flCities.map(c => c.toLowerCase()).includes(city.city.toLowerCase()) ? document.getElementById('fl-container') :
-                        orCities.map(c => c.toLowerCase()).includes(city.city.toLowerCase()) ? document.getElementById('or-container') :
-                        null;
-
-
-
+    const chartSection = ['Bayou Liberty', 'Hessmer', 'Homer', 'Lake Charles', 'Shreveport', 'Westwego'].includes(city.city)
+      ? document.getElementById('louisiana-container')
+      : document.getElementById('mississippi-container');
 
     chartSection?.appendChild(div);
 
@@ -371,12 +353,13 @@ function closeCityModal() {
     });
   }
 </script>
-<script src="main.js"></script>
+  <script src="main.js"></script>
+
 <script>
   const cityHistoryData = {};
 
   async function fetchHistoricalPerformance() {
-    const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=468224320&single=true&output=csv");
+    const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=468224320&single=true&output=csv");
     const text = await response.text();
     const lines = text.trim().split('\n');
     const headers = lines[0].split(',');
@@ -418,11 +401,13 @@ function closeCityModal() {
     fetchCollectorIssues().then(fetchChartData);
   });
 </script>
+
+
 <script>
   const cityHistoryData = {};
 
   async function fetchHistoricalPerformance() {
-    const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=468224320&single=true&output=csv");
+    const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=468224320&single=true&output=csv");
     const text = await response.text();
     const lines = text.trim().split('\n');
     const headers = lines[0].split(',');
@@ -463,5 +448,6 @@ function closeCityModal() {
 
   fetchHistoricalPerformance();
 </script>
+
 </body>
 </html>
