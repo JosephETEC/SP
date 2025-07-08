@@ -1,5 +1,43 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
 
-<!DOCTYPE html>
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8"/>
@@ -26,8 +64,8 @@ mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWF5ZG0wcTYwODJmM
 const map = new mapboxgl.Map({
   container: 'map',
   style: 'mapbox://styles/mapbox/streets-v12',
-  center: [-92.1, 31.2],
-  zoom: 1.5
+  center: [-98.5, 39.5],
+  zoom: 3
 });
 const bounds = new mapboxgl.LngLatBounds();
 function addMarker(lat, lon, popupHTML, isOnline) {
@@ -51,26 +89,24 @@ map.on('load', () => {
         complete: function(locationResults) {
           const locations = locationResults.data;
           let validCount = 0;
+          const targetStates = ['Louisiana', 'Mississippi', 'South Carolina', 'North Carolina', 'New Mexico', 'Florida', 'Oregon'];
           locations.forEach(row => {
+            const state = row.State?.trim();
             const lat = parseFloat(row.Latitude);
             const lon = parseFloat(row.Longitude);
             const city = row.City?.trim().toLowerCase();
             const displayName = row.City;
             const link = row["Page Link"] || "#";
-            const matching = collectorData.filter(c =>
-              c["City"]?.trim().toLowerCase() === city
-            );
-            const hasIssue = matching.some(m => m["Collector Issue"]?.trim().toLowerCase() === "yes");
-            if (!isNaN(lat) && !isNaN(lon)) {
-              const status = hasIssue ? "Offline" : "Online";
-              addMarker(lat, lon, `<a href='${link}'>${displayName}</a><br>Status: ${status}`, !hasIssue);
+            if (targetStates.includes(state) && !isNaN(lat) && !isNaN(lon)) {
+              const status = row.Issues?.trim().toLowerCase() === "yes" ? "Offline" : "Online";
+              addMarker(lat, lon, `<a href='${link}'>${displayName}</a><br>Status: ${status}`, row.Issues?.trim().toLowerCase() !== "yes");
               validCount++;
             }
           });
           if (validCount > 0) {
             map.fitBounds(bounds, { padding: 100 });
           } else {
-            alert("No valid city markers found for Louisiana.");
+            alert("No valid city markers found.");
           }
         }
       });
