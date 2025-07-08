@@ -7,6 +7,7 @@
   <title>SP - Kamstrup Health Report</title>
   <link rel="manifest" href="manifest.json"/>
   <meta name="theme-color" content="#2c5782"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -109,8 +110,8 @@
       padding: 20px;
     }
     .city-card {
-      width: 200px;
-      height: 150px;
+      width: 180px;
+      height: 180px;
       background: white;
       border-radius: 16px;
       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
@@ -118,13 +119,19 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      font-size: 1em;
+      font-size: 0.9em;
       text-align: center;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
+      padding: 10px;
     }
     .city-card:hover {
       transform: scale(1.05);
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+    canvas.donut {
+      max-width: 80px;
+      max-height: 80px;
+      margin-top: 6px;
     }
     .collector-box {
       margin: 20px auto;
@@ -223,7 +230,6 @@
           const issue = row[7]?.toLowerCase() === 'yes';
           const comment = row[8] || '';
 
-          // Grouping data by city
           if (!cityMap[city]) {
             cityMap[city] = { totalPerf: 0, count: 0 };
           }
@@ -240,8 +246,32 @@
           const avg = (cityMap[city].totalPerf / cityMap[city].count).toFixed(1);
           const card = document.createElement('div');
           card.className = 'city-card';
-          card.innerHTML = `<div><strong>${city}</strong></div><div>${avg}%</div>`;
+          const canvasId = `${state}-${city}`.replace(/\s+/g, '-').toLowerCase();
+          card.innerHTML = `
+            <strong>${city}</strong>
+            <canvas class="donut" id="${canvasId}"></canvas>
+            <div>${avg}%</div>
+          `;
           container.appendChild(card);
+
+          setTimeout(() => {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            new Chart(ctx, {
+              type: 'doughnut',
+              data: {
+                datasets: [{
+                  data: [avg, 100 - avg],
+                  backgroundColor: ['#2c5782', '#dce9f6'],
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                cutout: '70%',
+                responsive: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } }
+              }
+            });
+          }, 0);
         }
 
         issuesDiv.innerHTML = hasCollectorIssues ? issuesHtml : 'No collector issues reported.';
