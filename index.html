@@ -214,13 +214,13 @@
 </div>
 <div class="footer-bar">
 <button onclick="fetchChartData()">Refresh Dashboard Data</button><br/>
-<a href="https://docs.google.com/spreadsheets/d/1bxCYfdCDue8PBX5g24BLGwcxaA2clrr1PsOFjDojGRo/edit?gid=0#gid=0" target="_blank">Edit Performance Data in Google Sheets</a>
+<a href="https://docs.google.com/spreadsheets/d/1ty-vhb5k6FS6InlZp9CcGnwoizEdmyMz-IcPXg67tVU/edit?gid=0#gid=0" target="_blank">Edit Performance Data in Google Sheets</a>
 </div>
 <script>
     const citiesWithIssues = new Set();
 
     async function fetchCollectorIssues() {
-      const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv");
+      const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=941359224&single=true&output=csv");
       const text = await response.text();
       const rows = text.trim().split('\n').map(r => r.split(','));
       const headers = rows[0];
@@ -230,8 +230,8 @@
         if (obj["Collector Issue"] === "Yes") citiesWithIssues.add(obj.City);
         return obj;
       });
-      const laCities = ['Bayou Liberty', 'Hessmer', 'Homer', 'Lake Charles', 'Shreveport', 'Westwego'];
-      const msCities = ['Columbus', 'Diamondhead', 'Jackson', 'Moss Point', 'Okolona'];
+      const laCities = ['Hessmer', 'Lake Charles', 'Shreveport'];
+      const msCities = ['Jackson', 'Okolona'];
       const formatEntry = (e) => `<p><strong>${e.City}:</strong> ${e["Collector Name"]}, S/N: ${e["Serial Number"]}, Last Contact: ${e["Last Contact"]}, Comments: ${e.Comments}</p>`;
       const laIssues = data.filter(e => e["Collector Issue"] === "Yes" && laCities.includes(e.City));
 
@@ -256,7 +256,7 @@ async function fetchChartData() {
   document.getElementById('louisiana-container').innerHTML = '';
   document.getElementById('mississippi-container').innerHTML = '';
 
-  const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=0&single=true&output=csv");
+  const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=0&single=true&output=csv");
   const text = await response.text();
   const allRows = text.trim().split('\n');
   const rows = allRows.slice(1);
@@ -284,7 +284,7 @@ if (citiesWithIssues.has(city.city)) {
 
     window.cityLookup[city.city.toLowerCase()] = city;
 
-    const chartSection = ['Bayou Liberty', 'Hessmer', 'Homer', 'Lake Charles', 'Shreveport', 'Westwego'].includes(city.city)
+    const chartSection = ['Hessmer', 'Lake Charles', 'Shreveport'].includes(city.city)
       ? document.getElementById('louisiana-container')
       : document.getElementById('mississippi-container');
 
@@ -321,7 +321,6 @@ function showCityInfo(cityName) {
   document.getElementById("modalPerformance").textContent = city.value.toFixed(2);
   document.getElementById("modalTotal").textContent = city.total;
   document.getElementById("modalMissing").textContent = city.missing;
-  document.getElementById("modalHistory").textContent = city.history
 
   document.getElementById("cityModal").style.display = "block";
   document.getElementById("modalBackdrop").style.display = "block";
@@ -341,8 +340,6 @@ function closeCityModal() {
 <p style="margin:8px 0;"><strong>Reading Performance:</strong><br/><span id="modalPerformance" style="font-size:1.3em;"></span>%</p>
 <p style="margin:8px 0;"><strong>Total Meters:</strong><br/><span id="modalTotal"></span></p>
 <p style="margin:8px 0;"><strong>Missing Reads:</strong><br/><span id="modalMissing"></span></p>
-<p style="margin:8px 0;"><strong>Historical Performance:</strong><br/><span id="modalHistory"></span></p>
-<div id="historyFallback" style="margin-top:10px; font-size: 0.9em; color: #2c5782;"></div>
 <button onclick="closeCityModal()" style="margin-top:12px; padding:10px 20px; font-weight:bold; border-radius:8px;
     border: 2px solid #2c5782; background: #e0f3ff; cursor:pointer;">Close</button>
 </div>
