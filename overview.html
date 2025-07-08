@@ -76,15 +76,15 @@
       top: 0;
       height: 80px;
       box-sizing: border-box;
-      overflow: hidden; /* Prevent text overflow */
+      overflow: hidden;
     }
     header h1 {
       margin: 0;
       font-size: 24px;
       line-height: 1.2;
-      white-space: nowrap; /* Prevent text wrapping */
+      white-space: nowrap;
       overflow: hidden;
-      text-overflow: ellipsis; /* Add ellipsis if text is too long */
+      text-overflow: ellipsis;
     }
     .hamburger {
       position: fixed;
@@ -135,13 +135,13 @@
     <h1>Kamstrup System Overview</h1>
   </header>
   <div class="menu">
-    <a href="#" data-state="Louisiana">Louisiana</a>
-    <a href="#" data-state="Mississippi">Mississippi</a>
-    <a href="#" data-state="South Carolina">South Carolina</a>
-    <a href="#" data-state="North Carolina">North Carolina</a>
-    <a href="#" data-state="New Mexico">New Mexico</a>
-    <a href="#" data-state="Florida">Florida</a>
-    <a href="#" data-state="Oregon">Oregon</a>
+    <a href="louisiana.html">Louisiana</a>
+    <a href="mississippi.html">Mississippi</a>
+    <a href="south-carolina.html">South Carolina</a>
+    <a href="north-carolina.html">North Carolina</a>
+    <a href="new-mexico.html">New Mexico</a>
+    <a href="florida.html">Florida</a>
+    <a href="oregon.html">Oregon</a>
     <a href="/" id="health-report">Kamstrup Health Report</a>
   </div>
   <div id="map"></div>
@@ -199,25 +199,6 @@
               // Toggle menu
               document.querySelector('.hamburger').addEventListener('click', () => {
                 document.body.classList.toggle('menu-open');
-              });
-              // State filtering
-              document.querySelectorAll('.menu a[data-state]').forEach(link => {
-                link.addEventListener('click', (e) => {
-                  e.preventDefault();
-                  const state = link.getAttribute('data-state');
-                  markers.forEach(m => {
-                    m.marker.getElement().style.display = m.state === state ? 'block' : 'none';
-                  });
-                  const stateBounds = new mapboxgl.LngLatBounds();
-                  markers.filter(m => m.state === state && m.marker.getElement().style.display !== 'none')
-                    .forEach(m => stateBounds.extend(m.marker.getLngLat()));
-                  if (stateBounds.isEmpty()) {
-                    map.setCenter([-98.5, 39.5]).setZoom(3);
-                  } else {
-                    map.fitBounds(stateBounds, { padding: 50 });
-                  }
-                  document.body.classList.remove('menu-open');
-                });
               });
               // Health report redirect
               document.getElementById('health-report').addEventListener('click', (e) => {
