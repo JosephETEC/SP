@@ -253,6 +253,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       .blinking-alert { animation: none !important; opacity: 1 !important; }
     }
   </style>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 <body>
   <div class="hamburger">
@@ -509,28 +510,20 @@ document.addEventListener("DOMContentLoaded", function () {
   async function fetchCollectorIssues() {
     try {
       const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=941359224&single=true&output=csv");
-      const text = await response.text();
-      const rows = text.trim().split('\n').map(r => r.split(','));
-      const headersRaw = rows[0];
-      const headers = headersRaw.map(h => h.trim().toLowerCase());
+      const csvText = await response.text();
+      const parsed = Papa.parse(csvText.trim(), { header: true });
+      const data = parsed.data;
 
-      const cityIdx = headers.indexOf("city");
-      const nameIdx = headers.indexOf("collector name");
-      const snIdx = headers.indexOf("serial number");
-      const contactIdx = headers.indexOf("last contact");
-      const commentsIdx = headers.indexOf("comments");
-      const issueIdx = headers.indexOf("collector issue");
+      const issues = data.filter(row => row["Collector Issue"]?.toLowerCase() === "yes");
 
-      const issues = [];
+      const formatted = issues.map(row => `
+        <p><strong>${row["City"]}:</strong> ${row["Collector Name"]}, 
+        S/N: ${row["Serial Number"]}, 
+        Last Contact: ${row["Last Contact"]}, 
+        Comments: ${row["Comments"]}</p>
+      `).join("");
 
-      for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        if (row[issueIdx]?.trim().toLowerCase() === "yes") {
-          issues.push(`<p><strong>\${row[cityIdx]}:</strong> \${row[nameIdx]}, S/N: \${row[snIdx]}, Last Contact: \${row[contactIdx]}, Comments: \${row[commentsIdx]}</p>`);
-        }
-      }
-
-      document.getElementById('collector-issues-content-la').innerHTML = issues.length ? issues.join('') : "<p>No collector issues reported.</p>";
+      document.getElementById('collector-issues-content-la').innerHTML = formatted || "<p>No collector issues reported.</p>";
     } catch (err) {
       console.error("Error fetching LA collector issues:", err);
       document.getElementById('collector-issues-content-la').innerHTML = "<p style='color:red;'>Error loading data.</p>";
