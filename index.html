@@ -512,7 +512,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const response = await fetch(url);
       const csvText = await response.text();
       const parsed = Papa.parse(csvText.trim(), { header: true });
-      const data = parsed.data;
+      const data = parsed.data.filter(row => row["City"] && row["Collector Issue"]);
 
       const issues = data.filter(row => row["Collector Issue"]?.toLowerCase() === "yes");
 
