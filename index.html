@@ -427,12 +427,12 @@ window.addEventListener('DOMContentLoaded', async () => {
 
       rows.forEach(row => {
         window.cityLookup[row.city.toLowerCase()] = {
-          city: row.city,
-          state: row.state,
-          performance: row.performance,
-          total: row.total,
-          missing: row.missing
-        };
+      city: row.city,
+      state: row.state,
+      performance: row.performance,
+      total: row.total,
+      missing: row.missing
+    };
         const div = document.createElement('div');
         div.className = 'city-card';
         if (citiesWithIssues.has(row.city)) {
@@ -441,7 +441,13 @@ window.addEventListener('DOMContentLoaded', async () => {
         div.onclick = () => showCityInfo(row.city);
         div.innerHTML = `<div><strong style="font-size: 1.4em;">${row.city}</strong><br><span style="font-weight:bold; display:block; margin-top: 4px;">${row.performance.toFixed(2)}%</span><canvas id="${row.city.toLowerCase().replace(/\s+/g, '')}Chart" class="donut"></canvas>${citiesWithIssues.has(row.city) ? '<div class="blinking-alert">⚠️</div>' : ''}</div>`;
 
-        window.cityLookup[row.city.toLowerCase()] = { city: row.city, performance: row.performance };
+        window.cityLookup[row.city.toLowerCase()] = {
+      city: row.city,
+      state: row.state,
+      performance: row.performance,
+      total: row.total,
+      missing: row.missing
+    };
 
         const section = row.state === 'Louisiana' ? document.getElementById('louisiana-container')
           : row.state === 'Mississippi' ? document.getElementById('mississippi-container')
@@ -484,8 +490,8 @@ window.addEventListener('DOMContentLoaded', async () => {
       if (!city) return;
       document.getElementById("modalCityName").textContent = city.city;
       document.getElementById("modalPerformance").textContent = city.performance.toFixed(2);
-      document.getElementById("modalTotal").textContent = city.total ?? 'N/A'; // Placeholder; add total meters if available
-      document.getElementById("modalMissing").textContent = city.missing ?? 'N/A'; // Placeholder; add missing reads if available
+      document.getElementById("modalTotal").textContent = city.total !== undefined ? city.total : 'N/A'; // Placeholder; add total meters if available
+      document.getElementById("modalMissing").textContent = city.missing !== undefined ? city.missing : 'N/A'; // Placeholder; add missing reads if available
       document.getElementById("cityModal").style.display = "block";
       document.getElementById("modalBackdrop").style.display = "block";
     }
