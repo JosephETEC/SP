@@ -419,14 +419,20 @@ window.addEventListener('DOMContentLoaded', async () => {
         const total = parseInt(cols[headers.indexOf('Total Meters')]?.trim()) || 0;
         const missing = parseInt(cols[headers.indexOf('Meters with Missing Reads')]?.trim()) || 0;
 
-        window.cityLookup[city.toLowerCase()] = { city, state, performance, total, missing };
-
+        
         return { state, city, performance, total, missing };
       }).filter(row => row.state && row.city && !isNaN(row.performance));
 
       window.cityLookup = {};
 
       rows.forEach(row => {
+        window.cityLookup[row.city.toLowerCase()] = {
+          city: row.city,
+          state: row.state,
+          performance: row.performance,
+          total: row.total,
+          missing: row.missing
+        };
         const div = document.createElement('div');
         div.className = 'city-card';
         if (citiesWithIssues.has(row.city)) {
