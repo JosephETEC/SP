@@ -602,8 +602,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 <script>
 async function fetchChartData() {
-  window.cityLookup = {};
-  if (!window.citiesWithIssues) window.citiesWithIssues = new Set();
   document.getElementById('louisiana-container').innerHTML = '';
   document.getElementById('mississippi-container').innerHTML = '';
   document.getElementById('florida-container').innerHTML = '';
@@ -628,7 +626,11 @@ async function fetchChartData() {
 
   window.cityLookup = {};
 
-  rows.forEach(row => {{
+  const renderedCities = new Set();
+  rows.forEach(row => {
+    const cityKey = row.city.trim().toLowerCase();
+    if (renderedCities.has(cityKey)) return;
+    renderedCities.add(cityKey);{
     window.cityLookup[row.city.toLowerCase()] = {{
       city: row.city,
       state: row.state,
