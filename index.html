@@ -42,7 +42,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Kamstrup Health Report</title>
+  <title>SP - Kamstrup Health Report</title>
   <link rel="manifest" href="manifest.json"/>
   <meta name="theme-color" content="#2c5782"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -261,7 +261,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     <div></div>
   </div>
   <header>
-    <h1>Kamstrup Health Report</h1>
+    <h1>SP - Kamstrup Health Report</h1>
   </header>
   <div class="menu">
     <a href="index.html">Home</a>
@@ -431,7 +431,12 @@ window.addEventListener('DOMContentLoaded', async () => {
         div.onclick = () => showCityInfo(row.city);
         div.innerHTML = `<div><strong style="font-size: 1.4em;">${row.city}</strong><br><span style="font-weight:bold; display:block; margin-top: 4px;">${row.performance.toFixed(2)}%</span><canvas id="${row.city.toLowerCase().replace(/\s+/g, '')}Chart" class="donut"></canvas>${citiesWithIssues.has(row.city) ? '<div class="blinking-alert">⚠️</div>' : ''}</div>`;
 
-        window.cityLookup[row.city.toLowerCase()] = { city: row.city, performance: row.performance };
+       window.cityLookup[row.city.toLowerCase()] = {
+  city: row.city,
+  performance: row.performance,
+  total: parseInt(cols[headers.indexOf('Total Meters')] || '0', 10),
+  missing: parseInt(cols[headers.indexOf('Missing Reads')] || '0', 10)
+};
 
         const section = row.state === 'Louisiana' ? document.getElementById('louisiana-container')
           : row.state === 'Mississippi' ? document.getElementById('mississippi-container')
@@ -474,8 +479,8 @@ window.addEventListener('DOMContentLoaded', async () => {
       if (!city) return;
       document.getElementById("modalCityName").textContent = city.city;
       document.getElementById("modalPerformance").textContent = city.performance.toFixed(2);
-      document.getElementById("modalTotal").textContent = 'N/A'; // Placeholder; add total meters if available
-      document.getElementById("modalMissing").textContent = 'N/A'; // Placeholder; add missing reads if available
+      document.getElementById("modalTotal").textContent = city.total ?? 'N/A';
+      document.getElementById("modalMissing").textContent = city.missing ?? 'N/A';
       document.getElementById("cityModal").style.display = "block";
       document.getElementById("modalBackdrop").style.display = "block";
     }
