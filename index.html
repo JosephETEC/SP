@@ -254,6 +254,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   </style>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 <body>
   <div class="hamburger">
@@ -553,7 +554,56 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 <script>
+document.addEventListener("DOMContentLoaded", function () {
+  async function fetchAndRenderIssues(state, url, targetId) {
+    const container = document.getElementById(targetId);
+    container.innerHTML = "<p><em>Loading...</em></p>";
+
+    try {
+      const response = await fetch(url);
+      const csvText = await response.text();
+      const parsed = Papa.parse(csvText.trim(), { header: true });
+      const data = parsed.data.filter(row => row["City"] && row["Collector Issue"]);
+
+      const issues = data.filter(row => row["Collector Issue"]?.toLowerCase() === "yes");
+
+      const formatted = issues.map(row => `
+        <p><strong>${row["City"]}:</strong> ${row["Collector Name"]}, 
+        S/N: ${row["Serial Number"]}, 
+        Last Contact: ${row["Last Contact"]}, 
+        Comments: ${row["Comments"]}</p>
+      `).join("");
+
+      container.innerHTML = formatted || "<p>No collector issues reported.</p>";
+
+      // Populate citiesWithIssues
+      if (!window.citiesWithIssues) window.citiesWithIssues = new Set();
+      issues.forEach(row => window.citiesWithIssues.add(row["City"]));
+    } catch (err) {
+      console.error(`Error fetching ${state} collector issues:`, err);
+      container.innerHTML = "<p style='color:red;'>Error loading data.</p>";
+    }
+  }
+
+  Promise.all([
+    fetchAndRenderIssues("Louisiana", "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=941359224&single=true&output=csv", "collector-issues-content-la"),
+    fetchAndRenderIssues("Mississippi", "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=521732964&single=true&output=csv", "collector-issues-content-ms"),
+    fetchAndRenderIssues("South Carolina", "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=969914949&single=true&output=csv", "collector-issues-content-sc"),
+    fetchAndRenderIssues("North Carolina", "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=1242450237&single=true&output=csv", "collector-issues-content-nc"),
+    fetchAndRenderIssues("New Mexico", "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=179000959&single=true&output=csv", "collector-issues-content-nm"),
+    fetchAndRenderIssues("Florida", "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=1039143457&single=true&output=csv", "collector-issues-content-fl"),
+    fetchAndRenderIssues("Oregon", "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=100773433&single=true&output=csv", "collector-issues-content-or")
+  ]).then(() => {
+    fetchChartData();
+  });
+});
+</script>
+
+
+<script>
 async function fetchChartData() {
+  window.cityLookup = {};
+  if (!window.citiesWithIssues) window.citiesWithIssues = new Set();
   document.getElementById('louisiana-container').innerHTML = '';
   document.getElementById('mississippi-container').innerHTML = '';
   document.getElementById('florida-container').innerHTML = '';
