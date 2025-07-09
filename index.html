@@ -47,36 +47,18 @@
   <meta name="theme-color" content="#2c5782"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-window.addEventListener('DOMContentLoaded', async () => {
-  try {
-    const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=0&single=true&output=csv");
-    const text = await response.text();
-    const rows = text.trim().split('\n').map(r => r.split(',').map(c => c.trim()));
+    window.addEventListener('DOMContentLoaded', () => {
+      const now = new Date('2025-07-08T18:58:00-05:00'); // 01:58 PM CDT
+      const start = new Date(now);
+      start.setDate(now.getDate() - 3); // 07/05/2025
+      const end = new Date(now);
+      end.setDate(now.getDate() - 1);   // 07/07/2025
 
-    const headers = rows[0];
-    const reportDateIndex = headers.findIndex(h => h.toLowerCase() === 'report date');
-    const startDateIndex = headers.findIndex(h => h.toLowerCase() === 'start date');
-    const endDateIndex = headers.findIndex(h => h.toLowerCase() === 'end date');
-
-    if (reportDateIndex === -1 || startDateIndex === -1 || endDateIndex === -1) {
-      throw new Error("Headers not found");
-    }
-
-    const row = rows[1]; // Row 2 of the sheet
-
-    const reportDate = new Date(row[reportDateIndex]);
-    const startDate = new Date(row[startDateIndex]);
-    const endDate = new Date(row[endDateIndex]);
-
-    document.getElementById('report-date').textContent = reportDate.toLocaleDateString('en-US');
-    document.getElementById('start-date').textContent = startDate.toLocaleDateString('en-US');
-    document.getElementById('end-date').textContent = endDate.toLocaleDateString('en-US');
-  } catch (err) {
-    console.error(err);
-    document.getElementById('report-dates-box').innerHTML = '<strong>Unable to load report dates from sheet.</strong>';
-  }
-});
-</script>
+      document.getElementById('report-date').textContent = now.toLocaleDateString('en-US', { timeZone: 'America/Chicago' });
+      document.getElementById('start-date').textContent = start.toLocaleDateString('en-US', { timeZone: 'America/Chicago' });
+      document.getElementById('end-date').textContent = end.toLocaleDateString('en-US', { timeZone: 'America/Chicago' });
+    });
+  </script>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -142,7 +124,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     .menu a:hover { background-color: #1a3a5e; }
     .content {
       margin-top: 60px;
-      padding: 0;
+      padding: 20px;
       position: relative;
       z-index: 1;
     }
@@ -151,16 +133,13 @@ window.addEventListener('DOMContentLoaded', async () => {
       margin-bottom: 30px;
     }
     .region-header {
-  background-color: #dce9f6;
-  padding: 12px 0;
-  font-size: 2em;
-  font-weight: bold;
-  border-top: 2px solid #2c5782;
-  margin: 40px 0 0 0;
-  width: 100%;
-  text-align: center;
-  display: block;
-}
+      background-color: #dce9f6;
+      padding: 10px;
+      font-size: 2em;
+      font-weight: bold;
+      border-top: 2px solid #2c5782;
+      margin-top: 40px;
+    }
     .performance-container {
       display: flex;
       flex-wrap: wrap;
@@ -412,13 +391,18 @@ window.addEventListener('DOMContentLoaded', async () => {
       const allRows = text.trim().split('\n');
       const headers = allRows[0].split(',');
       const rows = allRows.slice(1).map(row => {
-        const cols = row.split(',');
-        return {
-          state: cols[headers.indexOf('State')]?.trim(),
-          city: cols[headers.indexOf('City')]?.trim(),
-          performance: parseFloat(cols[headers.indexOf('Performance (%)')]?.trim()) || 0
-        };
-      }).filter(row => row.state && row.city && !isNaN(row.performance));
+  const cols = row.split(',').map(c => c.trim());
+  const city = cols[headers.indexOf('City')] || '';
+  const state = cols[headers.indexOf('State')] || '';
+  const performance = parseFloat(cols[headers.indexOf('Performance (%)')] || '0');
+  const total = parseInt(cols[headers.indexOf('Total Meters')] || '0', 10);
+  const missing = parseInt(cols[headers.indexOf('Missing Reads')] || '0', 10);
+
+  const cityData = { city, state, performance, total, missing };
+  window.cityLookup[city.toLowerCase()] = cityData;
+
+  return cityData;
+}).filter(row => row.city && row.state && !isNaN(row.performance));
 
       window.cityLookup = {};
 
@@ -431,12 +415,12 @@ window.addEventListener('DOMContentLoaded', async () => {
         div.onclick = () => showCityInfo(row.city);
         div.innerHTML = `<div><strong style="font-size: 1.4em;">${row.city}</strong><br><span style="font-weight:bold; display:block; margin-top: 4px;">${row.performance.toFixed(2)}%</span><canvas id="${row.city.toLowerCase().replace(/\s+/g, '')}Chart" class="donut"></canvas>${citiesWithIssues.has(row.city) ? '<div class="blinking-alert">⚠️</div>' : ''}</div>`;
 
-       window.cityLookup[row.city.toLowerCase()] = {
-  city: row.city,
-  performance: row.performance,
-  total: parseInt(cols[headers.indexOf('Total Meters')] || '0', 10),
-  missing: parseInt(cols[headers.indexOf('Missing Reads')] || '0', 10)
-};
+        window.cityLookup[row.city.toLowerCase()] = {
+      city: row.city,
+      performance: row.performance,
+      total: row.total,
+      missing: row.missing
+    };
 
         const section = row.state === 'Louisiana' ? document.getElementById('louisiana-container')
           : row.state === 'Mississippi' ? document.getElementById('mississippi-container')
@@ -479,8 +463,8 @@ window.addEventListener('DOMContentLoaded', async () => {
       if (!city) return;
       document.getElementById("modalCityName").textContent = city.city;
       document.getElementById("modalPerformance").textContent = city.performance.toFixed(2);
-      document.getElementById("modalTotal").textContent = city.total ?? 'N/A';
-      document.getElementById("modalMissing").textContent = city.missing ?? 'N/A';
+      document.getElementById("modalTotal").textContent = city.total ?? 'N/A'; // Placeholder; add total meters if available
+      document.getElementById("modalMissing").textContent = city.missing ?? 'N/A'; // Placeholder; add missing reads if available
       document.getElementById("cityModal").style.display = "block";
       document.getElementById("modalBackdrop").style.display = "block";
     }
@@ -492,5 +476,24 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     fetchCollectorIssues().then(fetchChartData);
   </script>
+
+  <div id="cityModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+    background:white; padding:20px; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.3); z-index:1000; width:320px; 
+    text-align:center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color:#2c5782;">
+    <h2 id="modalCityName" style="margin-top:0; font-size:1.6em; font-weight:bold;"></h2>
+    <p style="margin:8px 0;"><strong>Reading Performance:</strong><br/><span id="modalPerformance" style="font-size:1.3em;"></span>%</p>
+    <p style="margin:8px 0;"><strong>Total Meters:</strong><br/><span id="modalTotal"></span></p>
+    <p style="margin:8px 0;"><strong>Missing Reads:</strong><br/><span id="modalMissing"></span></p>
+    <button onclick="closeCityModal()" style="margin-top:12px; padding:10px 20px; font-weight:bold; border-radius:8px;
+      border: 2px solid #2c5782; background: #e0f3ff; cursor:pointer;">Close</button>
+  </div>
+  <div id="modalBackdrop" onclick="closeCityModal()" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh;
+    background:rgba(0,0,0,0.5); z-index:999;"></div>
+
+  <div style="text-align:center; margin-bottom: 20px;">
+    <button onclick="window.print()" style="padding: 10px 20px; font-weight: bold; border: 2px solid #2c5782; background: #e0f3ff; cursor: pointer;">
+      Print / Export to PDF
+    </button>
+  </div>
 </body>
 </html>
