@@ -380,7 +380,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       const ncCities = ['Salemburg'];
       const orCities = ['Lakeview'];
       const scCities = ['Estill'];
-      const formatEntry = (e) => `<p><strong>${e.City}:</strong> ${e["Collector Name"]}, S/N: ${e["Serial Number"]}, Last Contact: ${e["Last Contact"]}, Comments: ${e.Comments}</p>`;
+const formatEntry = (e) => `<p><strong>${e.City}:</strong> ${e["Collector Name"]}, S/N: ${e["Serial Number"]}, Last Contact: ${e["Last Contact"]}, Comments: ${e.Comments}</p>`;
       const laIssues = data.filter(e => e["Collector Issue"] === "Yes" && laCities.includes(e.City));
       const msIssues = data.filter(e => e["Collector Issue"] === "Yes" && msCities.includes(e.City));
       const flIssues = data.filter(e => e["Collector Issue"] === "Yes" && flCities.includes(e.City));
