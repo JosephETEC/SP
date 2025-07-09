@@ -507,9 +507,9 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  async function fetchCollectorIssues() {
+  async function fetchAndRenderIssues(state, url, targetId) {
     try {
-      const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=941359224&single=true&output=csv");
+      const response = await fetch(url);
       const csvText = await response.text();
       const parsed = Papa.parse(csvText.trim(), { header: true });
       const data = parsed.data;
@@ -523,14 +523,15 @@ document.addEventListener("DOMContentLoaded", function () {
         Comments: ${row["Comments"]}</p>
       `).join("");
 
-      document.getElementById('collector-issues-content-la').innerHTML = formatted || "<p>No collector issues reported.</p>";
+      document.getElementById(targetId).innerHTML = formatted || "<p>No collector issues reported.</p>";
     } catch (err) {
-      console.error("Error fetching LA collector issues:", err);
-      document.getElementById('collector-issues-content-la').innerHTML = "<p style='color:red;'>Error loading data.</p>";
+      console.error(`Error fetching ${state} collector issues:`, err);
+      document.getElementById(targetId).innerHTML = "<p style='color:red;'>Error loading data.</p>";
     }
   }
 
-  fetchCollectorIssues();
+  fetchAndRenderIssues("Louisiana", "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=941359224&single=true&output=csv", "collector-issues-content-la");
+  fetchAndRenderIssues("Mississippi", "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=521732964&single=true&output=csv", "collector-issues-content-ms");
 });
 </script>
 
