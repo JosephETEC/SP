@@ -508,6 +508,9 @@ window.addEventListener('DOMContentLoaded', async () => {
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   async function fetchAndRenderIssues(state, url, targetId) {
+    const container = document.getElementById(targetId);
+    container.innerHTML = "<p><em>Loading...</em></p>";
+
     try {
       const response = await fetch(url);
       const csvText = await response.text();
@@ -523,14 +526,14 @@ document.addEventListener("DOMContentLoaded", function () {
         Comments: ${row["Comments"]}</p>
       `).join("");
 
-      document.getElementById(targetId).innerHTML = formatted || "<p>No collector issues reported.</p>";
+      container.innerHTML = formatted || "<p>No collector issues reported.</p>";
 
       // Populate citiesWithIssues
       if (!window.citiesWithIssues) window.citiesWithIssues = new Set();
       issues.forEach(row => window.citiesWithIssues.add(row["City"]));
     } catch (err) {
       console.error(`Error fetching ${state} collector issues:`, err);
-      document.getElementById(targetId).innerHTML = "<p style='color:red;'>Error loading data.</p>";
+      container.innerHTML = "<p style='color:red;'>Error loading data.</p>";
     }
   }
 
