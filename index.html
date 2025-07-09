@@ -47,33 +47,36 @@
   <meta name="theme-color" content="#2c5782"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    window.addEventListener('DOMContentLoaded', async () => {
+window.addEventListener('DOMContentLoaded', async () => {
   try {
     const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=0&single=true&output=csv");
     const text = await response.text();
-    const rows = text.trim().split('\n').map(r => r.split(','));
-    
+    const rows = text.trim().split('\n').map(r => r.split(',').map(c => c.trim()));
+
     const headers = rows[0];
-    const reportDateIndex = headers.indexOf('Report Date');
-    const startDateIndex = headers.indexOf('Start Date');
-    const endDateIndex = headers.indexOf('End Date');
+    const reportDateIndex = headers.findIndex(h => h.toLowerCase() === 'report date');
+    const startDateIndex = headers.findIndex(h => h.toLowerCase() === 'start date');
+    const endDateIndex = headers.findIndex(h => h.toLowerCase() === 'end date');
 
-    // Look for the first row with all three values populated
-    const dateRow = rows.find((r, i) => i > 0 && r[reportDateIndex] && r[startDateIndex] && r[endDateIndex]);
-
-    if (dateRow) {
-      document.getElementById('report-date').textContent = new Date(dateRow[reportDateIndex]).toLocaleDateString('en-US');
-      document.getElementById('start-date').textContent = new Date(dateRow[startDateIndex]).toLocaleDateString('en-US');
-      document.getElementById('end-date').textContent = new Date(dateRow[endDateIndex]).toLocaleDateString('en-US');
-    } else {
-      document.getElementById('report-dates-box').innerHTML = '<strong>Unable to load report dates from sheet.</strong>';
+    if (reportDateIndex === -1 || startDateIndex === -1 || endDateIndex === -1) {
+      throw new Error("Headers not found");
     }
-  } catch (error) {
-    console.error('Date load error:', error);
-    document.getElementById('report-dates-box').innerHTML = '<strong>Error loading report dates.</strong>';
+
+    const row = rows[1]; // Row 2 of the sheet
+
+    const reportDate = new Date(row[reportDateIndex]);
+    const startDate = new Date(row[startDateIndex]);
+    const endDate = new Date(row[endDateIndex]);
+
+    document.getElementById('report-date').textContent = reportDate.toLocaleDateString('en-US');
+    document.getElementById('start-date').textContent = startDate.toLocaleDateString('en-US');
+    document.getElementById('end-date').textContent = endDate.toLocaleDateString('en-US');
+  } catch (err) {
+    console.error(err);
+    document.getElementById('report-dates-box').innerHTML = '<strong>Unable to load report dates from sheet.</strong>';
   }
 });
-  </script>
+</script>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
