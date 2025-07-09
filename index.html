@@ -380,7 +380,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       const ncCities = ['Salemburg'];
       const orCities = ['Lakeview'];
       const scCities = ['Estill'];
-const formatEntry = (e) => `<p><strong>${e.City}:</strong> ${e["Collector Name"]}, S/N: ${e["Serial Number"]}, Last Contact: ${e["Last Contact"]}, Comments: ${e.Comments}</p>`;
+      const formatEntry = (e) => `<p><strong>${e.City}:</strong> ${e["Collector Name"]}, S/N: ${e["Serial Number"]}, Last Contact: ${e["Last Contact"]}, Comments: ${e.Comments}</p>`;
       const laIssues = data.filter(e => e["Collector Issue"] === "Yes" && laCities.includes(e.City));
       const msIssues = data.filter(e => e["Collector Issue"] === "Yes" && msCities.includes(e.City));
       const flIssues = data.filter(e => e["Collector Issue"] === "Yes" && flCities.includes(e.City));
@@ -511,15 +511,26 @@ document.addEventListener("DOMContentLoaded", function () {
       const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=941359224&single=true&output=csv");
       const text = await response.text();
       const rows = text.trim().split('\n').map(r => r.split(','));
-      const headers = rows[0];
-      const data = rows.slice(1).map(row => {
-        const obj = {};
-        headers.forEach((h, i) => obj[h.trim()] = row[i] ? row[i].trim() : '');
-        return obj;
-      });
-      const laIssues = data.filter(e => e["Collector Issue"] === "Yes");
-      const formatEntry = (e) => `<p><strong>\${e.City}:</strong> \${e["Collector Name"]}, S/N: \${e["Serial Number"]}, Last Contact: \${e["Last Contact"]}, Comments: \${e.Comments}</p>`;
-      document.getElementById('collector-issues-content-la').innerHTML = laIssues.length ? laIssues.map(formatEntry).join('') : "<p>No collector issues reported.</p>";
+      const headersRaw = rows[0];
+      const headers = headersRaw.map(h => h.trim().toLowerCase());
+
+      const cityIdx = headers.indexOf("city");
+      const nameIdx = headers.indexOf("collector name");
+      const snIdx = headers.indexOf("serial number");
+      const contactIdx = headers.indexOf("last contact");
+      const commentsIdx = headers.indexOf("comments");
+      const issueIdx = headers.indexOf("collector issue");
+
+      const issues = [];
+
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (row[issueIdx]?.trim().toLowerCase() === "yes") {
+          issues.push(`<p><strong>\${row[cityIdx]}:</strong> \${row[nameIdx]}, S/N: \${row[snIdx]}, Last Contact: \${row[contactIdx]}, Comments: \${row[commentsIdx]}</p>`);
+        }
+      }
+
+      document.getElementById('collector-issues-content-la').innerHTML = issues.length ? issues.join('') : "<p>No collector issues reported.</p>";
     } catch (err) {
       console.error("Error fetching LA collector issues:", err);
       document.getElementById('collector-issues-content-la').innerHTML = "<p style='color:red;'>Error loading data.</p>";
