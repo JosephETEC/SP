@@ -413,11 +413,15 @@ window.addEventListener('DOMContentLoaded', async () => {
       const headers = allRows[0].split(',');
       const rows = allRows.slice(1).map(row => {
         const cols = row.split(',');
-        return {
-          state: cols[headers.indexOf('State')]?.trim(),
-          city: cols[headers.indexOf('City')]?.trim(),
-          performance: parseFloat(cols[headers.indexOf('Performance (%)')]?.trim()) || 0
-        };
+        const state = cols[headers.indexOf('State')]?.trim();
+        const city = cols[headers.indexOf('City')]?.trim();
+        const performance = parseFloat(cols[headers.indexOf('Performance (%)')]?.trim()) || 0;
+        const total = parseInt(cols[headers.indexOf('Total Meters')]?.trim()) || 0;
+        const missing = parseInt(cols[headers.indexOf('Meters with Missing Reads')]?.trim()) || 0;
+
+        window.cityLookup[city.toLowerCase()] = { city, state, performance, total, missing };
+
+        return { state, city, performance, total, missing };
       }).filter(row => row.state && row.city && !isNaN(row.performance));
 
       window.cityLookup = {};
@@ -474,8 +478,8 @@ window.addEventListener('DOMContentLoaded', async () => {
       if (!city) return;
       document.getElementById("modalCityName").textContent = city.city;
       document.getElementById("modalPerformance").textContent = city.performance.toFixed(2);
-      document.getElementById("modalTotal").textContent = 'N/A'; // Placeholder; add total meters if available
-      document.getElementById("modalMissing").textContent = 'N/A'; // Placeholder; add missing reads if available
+      document.getElementById("modalTotal").textContent = city.total ?? 'N/A'; // Placeholder; add total meters if available
+      document.getElementById("modalMissing").textContent = city.missing ?? 'N/A'; // Placeholder; add missing reads if available
       document.getElementById("cityModal").style.display = "block";
       document.getElementById("modalBackdrop").style.display = "block";
     }
