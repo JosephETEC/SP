@@ -354,12 +354,12 @@ async function loadReportDates() {
     const text = await response.text();
     const rows = text.trim().split('\n').map(row => row.split(','));
 
-    const headers = rows[0];
+    const headers = rows[0].map(h => h.trim().toLowerCase());
     const row2 = rows[1];
 
-    const reportDateIndex = headers.indexOf("Report Date");
-    const startDateIndex = headers.indexOf("Start Date");
-    const endDateIndex = headers.indexOf("End Date");
+    const reportDateIndex = headers.findIndex(h => h.includes("report date"));
+    const startDateIndex = headers.findIndex(h => h.includes("start date"));
+    const endDateIndex = headers.findIndex(h => h.includes("end date"));
 
     if (reportDateIndex !== -1 && startDateIndex !== -1 && endDateIndex !== -1) {
       document.getElementById('report-date').textContent = row2[reportDateIndex] || "N/A";
@@ -371,5 +371,5 @@ async function loadReportDates() {
   }
 }
 loadReportDates();
-</script></body>
+        </script></body>
 </html>
