@@ -210,7 +210,16 @@
       const laCities = ['hessmer', 'homer', 'lake charles', 'shreveport'];
       const msCities = ['Columbus', 'Diamondhead', 'Jackson', 'Moss Point', 'Okolona'];
       
-      const formatEntry = (e) => `<p><strong>${e.city}:</strong> ${e["collector name"] || "N/A"}, S/N: ${e["serial number"] || "N/A"}, Last Contact: ${e["last contact"] || "N/A"}, Comments: ${e.comments || "N/A"}</p>`;
+      
+const formatEntry = (e) => {
+  const city = e.city || "Unknown";
+  const name = e["collector name"] || "N/A";
+  const sn = e["serial number"] || "N/A";
+  const contact = e["last contact"] || "N/A";
+  const comment = e["comments"] || "N/A";
+  return `<p><strong>${city}:</strong> ${name}, S/N: ${sn}, Last Contact: ${contact}, Comments: ${comment}</p>`;
+};
+            
             
       
       const laIssues = data.filter(e => e["collector issue"] === "Yes" && ['hessmer', 'homer', 'lake charles', 'shreveport'].includes(e.city?.toLowerCase()));
