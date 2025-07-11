@@ -212,7 +212,9 @@
       
       const formatEntry = (e) => `<p><strong>${e.city}:</strong> ${e["collector name"] || "N/A"}, S/N: ${e["serial number"] || "N/A"}, Last Contact: ${e["last contact"] || "N/A"}, Comments: ${e.comments || "N/A"}</p>`;
             
-      const laIssues = data.filter(e => e["Collector Issue"] === "Yes" && laCities.includes(e.City));
+      
+      const laIssues = data.filter(e => e["collector issue"] === "Yes" && ['hessmer', 'homer', 'lake charles', 'shreveport'].includes(e.city?.toLowerCase()));
+            
 
       const msResponse = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=941359224&single=true&output=csv");
       const msText = await msResponse.text();
