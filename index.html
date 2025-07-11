@@ -8,25 +8,6 @@
 <link href="manifest.json" rel="manifest"/>
 <meta content="#2c5782" name="theme-color"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    window.addEventListener('DOMContentLoaded', () => {
-      const today = new Date();
-      const start = new Date();
-      start.setDate(today.getDate() - 3);
-      const end = new Date();
-      end.setDate(today.getDate() - 1);
-
-      document.getElementById('report-date').textContent = today.toLocaleDateString('en-US', {
-        year: 'numeric', month: 'long', day: 'numeric'
-      });
-      document.getElementById('start-date').textContent = start.toLocaleDateString('en-US', {
-        year: 'numeric', month: 'long', day: 'numeric'
-      });
-      document.getElementById('end-date').textContent = end.toLocaleDateString('en-US', {
-        year: 'numeric', month: 'long', day: 'numeric'
-      });
-    });
-  </script>
 <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -365,5 +346,30 @@ function closeCityModal() {
   }
 </script>
 <script src="main.js"></script>
-</body>
+<script>
+async function loadReportDates() {
+  const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=0&single=true&output=csv";
+  try {
+    const response = await fetch(url);
+    const text = await response.text();
+    const rows = text.trim().split('\n').map(row => row.split(','));
+
+    const headers = rows[0];
+    const row2 = rows[1];
+
+    const reportDateIndex = headers.indexOf("Report Date");
+    const startDateIndex = headers.indexOf("Start Date");
+    const endDateIndex = headers.indexOf("End Date");
+
+    if (reportDateIndex !== -1 && startDateIndex !== -1 && endDateIndex !== -1) {
+      document.getElementById('report-date').textContent = row2[reportDateIndex] || "N/A";
+      document.getElementById('start-date').textContent = row2[startDateIndex] || "N/A";
+      document.getElementById('end-date').textContent = row2[endDateIndex] || "N/A";
+    }
+  } catch (err) {
+    console.error("Error loading report dates:", err);
+  }
+}
+loadReportDates();
+</script></body>
 </html>
