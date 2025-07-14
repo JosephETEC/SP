@@ -130,12 +130,16 @@
       const rows = lines.slice(1);
 
       // Pull dates from last row
-      const lastRow = rows[rows.length - 1];
+      const lastRow = rows.find(r => r[9] && r[10] && r[11]) || [];
       document.getElementById('report-date').textContent = lastRow[9];
       document.getElementById('start-date').textContent = lastRow[10];
       document.getElementById('end-date').textContent = lastRow[11];
 
       for (const row of rows) {
+        const [state, city, performance, total, missing] = row;
+        if (!stateOrder.includes(state)) continue;
+        if (isNaN(parseFloat(performance))) continue;
+    
         const [state, city, performance, total, missing] = row;
         if (!stateOrder.includes(state)) continue;
 
