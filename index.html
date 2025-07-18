@@ -361,7 +361,95 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     const citiesWithIssues = new Set();
 
-    async function fetchCollectorIssues() {
+    
+const stateConfig = {
+  'la': {
+    name: 'Louisiana',
+    cities: ['Hessmer', 'Lake Charles', 'Shreveport'],
+    elementId: 'collector-issues-content-la',
+    sheet: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=941359224&single=true&output=csv'
+  },
+  'ms': {
+    name: 'Mississippi',
+    cities: ['Jackson', 'Okolona'],
+    elementId: 'collector-issues-content-ms',
+    sheet: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=521732964&single=true&output=csv'
+  },
+  'fl': {
+    name: 'Florida',
+    cities: ['Sunnlake'],
+    elementId: 'collector-issues-content-fl',
+    sheet: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=1039143457&single=true&output=csv'
+  },
+  'nm': {
+    name: 'New Mexico',
+    cities: ['Roosevelt County', 'Jal', 'Angel Fire'],
+    elementId: 'collector-issues-content-nm',
+    sheet: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=179000959&single=true&output=csv'
+  },
+  'nc': {
+    name: 'North Carolina',
+    cities: ['Salemburg'],
+    elementId: 'collector-issues-content-nc',
+    sheet: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=1242450237&single=true&output=csv'
+  },
+  'or': {
+    name: 'Oregon',
+    cities: ['Lakeview'],
+    elementId: 'collector-issues-content-or',
+    sheet: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=100773433&single=true&output=csv'
+  },
+  'sc': {
+    name: 'South Carolina',
+    cities: ['Estill'],
+    elementId: 'collector-issues-content-sc',
+    sheet: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=969914949&single=true&output=csv'
+  }
+};
+
+const citiesWithIssues = new Set();
+
+async function fetchStateIssues(config) {
+  try {
+    const res = await fetch(config.sheet);
+    const text = await res.text();
+    const rows = text.trim().split('\n').map(r => r.split(','));
+    const headers = rows[0];
+
+    const data = rows.slice(1).map(row => {
+      const obj = {};
+      headers.forEach((h, i) => obj[h.trim()] = row[i]?.trim() || '');
+      return obj;
+    });
+
+    const issues = data.filter(e =>
+      e["Collector Issue"]?.trim().toLowerCase() === "yes" &&
+      config.cities.includes(e.City?.trim())
+    );
+    issues.forEach(e => citiesWithIssues.add(e.City));
+
+    const content = issues.length
+      ? issues.map(e =>
+          `<p><strong>${e.City}:</strong> ${e["Collector Name"]}, S/N: ${e["Serial Number"]}, Last Contact: ${e["Last Contact"]}, Comments: ${e.Comments}</p>`
+        ).join('')
+      : "<p>No collector issues reported.</p>";
+
+    document.getElementById(config.elementId).innerHTML = content;
+
+  } catch (err) {
+    console.error(`Error loading ${config.name}:`, err);
+    document.getElementById(config.elementId).innerHTML = "<p>Error loading data.</p>";
+  }
+}
+
+async function fetchCollectorIssues() {
+  const promises = Object.values(stateConfig).map(fetchStateIssues);
+  await Promise.all(promises);
+}
+
+
+// patched fetchCollectorIssues() entry
+async function fetchCollectorIssues() {
       const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=0&single=true&output=csv");
       const text = await response.text();
       const rows = text.trim().split('\n').map(r => r.split(','));
