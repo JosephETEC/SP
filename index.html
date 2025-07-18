@@ -572,8 +572,8 @@ const issues = data.filter(e =>
 
     function showCityInfo(cityName) {
       const city = window.cityLookup[cityName.toLowerCase()];
-      if (!city) return;
-      document.getElementById("modalCityName").textContent = city.city;
+      if (!city) // removed invalid return
+document.getElementById("modalCityName").textContent = city.city;
       document.getElementById("modalPerformance").textContent = city.performance.toFixed(2);
       document.getElementById("modalTotal").textContent = city.total !== undefined ? city.total : 'N/A'; // Placeholder; add total meters if available
       document.getElementById("modalMissing").textContent = city.missing !== undefined ? city.missing : 'N/A'; // Placeholder; add missing reads if available
@@ -590,13 +590,7 @@ const issues = data.filter(e =>
   </script>
 
 <script>
-async function fetchCollectorIssues() {
-  console.log('✅ fetchCollectorIssues triggered');
-  const promises = Object.values(stateConfig).map(fetchStateIssues);
-  await Promise.all(promises);
-}
-fetchCollectorIssues().then(fetchChartData);
+  fetchCollectorIssues().then(fetchChartData);
 </script>
-
 </body>
 </html>
