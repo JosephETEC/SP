@@ -411,6 +411,7 @@ const stateConfig = {
 
 
 async function fetchStateIssues(config) {
+  console.log('🔍 Running fetchStateIssues for', config.name);
   try {
     const res = await fetch(config.sheet);
     const text = await res.text();
@@ -423,7 +424,10 @@ async function fetchStateIssues(config) {
       return obj;
     });
 
-    console.log("🟡 Raw cities in sheet:", [...new Set(data.map(d => d.City))]);
+    if (config.name === "Louisiana") {
+  console.log("🟡 Raw cities in sheet:", [...new Set(data.map(d => d.City))]);
+  console.log("🟠 Louisiana city list:", config.cities);
+}
 const issues = data.filter(e =>
       e["Collector Issue"]?.trim().toLowerCase() === "yes" &&
       config.cities.map(c => c.trim()).includes(e.City?.trim())
