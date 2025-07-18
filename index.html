@@ -423,5 +423,86 @@ async function fetchCollectorIssues() {
 fetchCollectorIssues().then(fetchChartData);
 </script>
 
+
+<script>
+async function fetchChartData() {
+  document.getElementById('louisiana-container').innerHTML = '';
+  document.getElementById('mississippi-container').innerHTML = '';
+  document.getElementById('florida-container').innerHTML = '';
+  document.getElementById('new-mexico-container').innerHTML = '';
+  document.getElementById('north-carolina-container').innerHTML = '';
+  document.getElementById('oregon-container').innerHTML = '';
+  document.getElementById('south-carolina-container').innerHTML = '';
+
+  const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=0&single=true&output=csv");
+  const text = await response.text();
+  const allRows = text.trim().split('\n');
+  const headers = allRows[0].split(',');
+  const rows = allRows.slice(1).map(row => {
+    const cols = row.split(',');
+    const state = cols[headers.indexOf('State')]?.trim();
+    const city = cols[headers.indexOf('City')]?.trim();
+    const performance = parseFloat(cols[headers.indexOf('Performance (%)')]?.trim()) || 0;
+    const total = parseInt(cols[headers.indexOf('Total Meters')]?.trim()) || 0;
+    const missing = parseInt(cols[headers.indexOf('Meters with Missing Reads')]?.trim()) || 0;
+
+    return { state, city, performance, total, missing };
+  }).filter(row => row.state && row.city && !isNaN(row.performance));
+
+  window.cityLookup = {};
+
+  rows.forEach(row => {
+    window.cityLookup[row.city.toLowerCase()] = {
+      city: row.city,
+      state: row.state,
+      performance: row.performance,
+      total: row.total,
+      missing: row.missing
+    };
+    const div = document.createElement('div');
+    div.className = 'city-card';
+    if (citiesWithIssues.has(row.city)) {
+      div.style.backgroundColor = '#ffdddd';
+    }
+    div.onclick = () => showCityInfo(row.city);
+    div.innerHTML = `<div><strong style="font-size: 1.4em;">${row.city}</strong><br><span style="font-weight:bold; display:block; margin-top: 4px;">${row.performance.toFixed(2)}%</span><canvas id="${row.city.toLowerCase().replace(/\s+/g, '')}Chart" class="donut"></canvas>${citiesWithIssues.has(row.city) ? '<div class="blinking-alert">⚠️</div>' : ''}</div>`;
+
+    const section = row.state === 'Louisiana' ? document.getElementById('louisiana-container')
+      : row.state === 'Mississippi' ? document.getElementById('mississippi-container')
+      : row.state === 'Florida' ? document.getElementById('florida-container')
+      : row.state === 'New Mexico' ? document.getElementById('new-mexico-container')
+      : row.state === 'North Carolina' ? document.getElementById('north-carolina-container')
+      : row.state === 'Oregon' ? document.getElementById('oregon-container')
+      : row.state === 'South Carolina' ? document.getElementById('south-carolina-container')
+      : null;
+
+    if (section) section.appendChild(div);
+
+    const canvas = document.getElementById(`${row.city.toLowerCase().replace(/\s+/g, '')}Chart`);
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          datasets: [{
+            data: [row.performance, 100 - row.performance],
+            backgroundColor: ['#2c5782', '#ffa500'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          cutout: '50%',
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false }
+          }
+        }
+      });
+    }
+  });
+}
+</script>
+
 </body>
 </html>
