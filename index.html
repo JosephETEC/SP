@@ -448,19 +448,11 @@ const issues = data.filter(e =>
   }
 }
 
-async function fetchCollectorIssues() {
-  console.log('✅ fetchCollectorIssues triggered');
-  const promises = Object.values(stateConfig).map(fetchStateIssues);
-  await Promise.all(promises);
-}
+
 
 
 // patched fetchCollectorIssues() entry
-async function fetchCollectorIssues() {
-  console.log('✅ fetchCollectorIssues triggered');
-  const promises = Object.values(stateConfig).map(fetchStateIssues);
-  await Promise.all(promises);
-};
+;
         headers.forEach((h, i) => obj[h.trim()] = row[i] ? row[i].trim() : '');
         if (obj["Collector Issue"] === "Yes") citiesWithIssues.add(obj.City);
         return obj;
@@ -596,5 +588,15 @@ async function fetchCollectorIssues() {
 
     fetchCollectorIssues().then(fetchChartData);
   </script>
+
+<script>
+async function fetchCollectorIssues() {
+  console.log('✅ fetchCollectorIssues triggered');
+  const promises = Object.values(stateConfig).map(fetchStateIssues);
+  await Promise.all(promises);
+}
+fetchCollectorIssues().then(fetchChartData);
+</script>
+
 </body>
 </html>
