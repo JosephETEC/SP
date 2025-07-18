@@ -1,86 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<style>
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f4f4f4;
-    margin: 0;
-    padding: 0;
-    color: #2c5782;
-    text-align: center;
-  }
-  header {
-    background-color: #2c5782;
-    padding: 12px 20px;
-    color: white;
-    text-align: center;
-    position: sticky;
-    top: 0;
-    z-index: 1001;
-  }
-  header h1 {
-    margin: 0;
-    font-size: 24px;
-  }
-  .region-header {
-    background-color: #dce9f6;
-    padding: 12px 0;
-    font-size: 2em;
-    font-weight: bold;
-    border-top: 2px solid #2c5782;
-    margin: 40px 0 0 0;
-    width: 100%;
-    text-align: center;
-    display: block;
-  }
-  .performance-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 24px;
-    padding: 20px;
-  }
-  .city-card {
-    width: 200px;
-    height: 200px;
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    font-size: 1em;
-    text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .city-card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-  }
-  canvas.donut {
-    max-width: 80px;
-    max-height: 80px;
-    margin-top: 8px;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .collector-box {
-    margin: 20px auto;
-    max-width: 900px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    text-align: center;
-  }
-  .collector-box h2 {
-    margin-top: 0;
-  }
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kamstrup Health Report</title>
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#2c5782"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      color: #2c5782;
+      text-align: center;
+    }
+    header {
+      background-color: #2c5782;
+      padding: 12px 20px;
+      color: white;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 1001;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    .region-header {
+      background-color: #dce9f6;
+      padding: 12px 0;
+      font-size: 2em;
+      font-weight: bold;
+      border-top: 2px solid #2c5782;
+      margin: 40px 0 0 0;
+      width: 100%;
+      text-align: center;
+      display: block;
+    }
+    .performance-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 24px;
+      padding: 20px;
+    }
+    .city-card {
+      width: 200px;
+      height: 200px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 1em;
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .city-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+    canvas.donut {
+      max-width: 80px;
+      max-height: 80px;
+      margin-top: 8px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .collector-box {
+      margin: 20px auto;
+      max-width: 900px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      text-align: center;
+    }
+    .collector-box h2 {
+      margin-top: 0;
+    }
+    .footer-bar {
+      text-align: center;
+      padding: 20px;
+    }
+    .footer-bar button {
+      padding: 10px 20px;
+      font-weight: bold;
+      border: 2px solid #2c5782;
+      background: #e0f3ff;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    .footer-bar a {
+      display: inline-block;
+      margin-bottom: 10px;
+      text-decoration: none;
+      color: #2c5782;
+      font-size: 0.9em;
+    }
+    .hamburger {
+      position: fixed;
+      top: 15px;
+      left: 20px;
+      cursor: pointer;
+      z-index: 1002;
+    }
+    .hamburger div {
+      width: 25px;
+      height: 3px;
+      background-color: white;
+      margin: 5px 0;
+      transition: all 0.3s ease;
+    }
+    .menu-open .hamburger div:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .menu-open .hamburger div:nth-child(2) { opacity: 0; }
+    .menu-open .hamburger div:nth-child(3) { transform: rotate(-45deg) translate(6px, -6px); }
+    .menu {
+      position: fixed;
+      top: 0;
+      left: -250px;
+      width: 250px;
+      height: 100%;
+      background-color: #2c5782;
+      padding-top: 70px;
+      transition: left 0.3s ease;
+      z-index: 1000;
+    }
+    .menu-open .menu { left: 0; }
+    .menu a {
+      display: block;
+      color: white;
+      padding: 15px 20px;
+      text-decoration: none;
+      font-size: 16px;
+    }
+    .menu a:hover { background-color: #1a3a5e; }
+  </style>
 
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
