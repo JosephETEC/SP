@@ -423,9 +423,10 @@ async function fetchStateIssues(config) {
       return obj;
     });
 
-    const issues = data.filter(e =>
+    console.log("🟡 Raw cities in sheet:", [...new Set(data.map(d => d.City))]);
+const issues = data.filter(e =>
       e["Collector Issue"]?.trim().toLowerCase() === "yes" &&
-      config.cities.includes(e.City?.trim())
+      config.cities.map(c => c.trim()).includes(e.City?.trim())
     );
     issues.forEach(e => citiesWithIssues.add(e.City));
 
