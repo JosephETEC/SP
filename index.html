@@ -1,1 +1,281 @@
-/mnt/data/index_final_complete.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kamstrup Health Report</title>
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#2c5782"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Kamstrup Health Report</h1>
+    <div id="report-dates-box">
+      Report Date: <span id="report-date"></span><br/>
+      Start Date: <span id="start-date"></span><br/>
+      End Date: <span id="end-date"></span>
+    </div>
+  </header>
+
+  <div class="region-header">Louisiana</div>
+  <div class="performance-container" id="louisiana-container"></div>
+  <div class="collector-box">
+    <h2>Collector Issues</h2>
+    <div id="collector-issues-content-la">Loading...</div>
+  </div>
+
+  <div class="region-header">Mississippi</div>
+  <div class="performance-container" id="mississippi-container"></div>
+  <div class="collector-box">
+    <h2>Collector Issues</h2>
+    <div id="collector-issues-content-ms">Loading...</div>
+  </div>
+
+  <div class="region-header">Florida</div>
+  <div class="performance-container" id="florida-container"></div>
+  <div class="collector-box">
+    <h2>Collector Issues</h2>
+    <div id="collector-issues-content-fl">Loading...</div>
+  </div>
+
+  <div class="region-header">New Mexico</div>
+  <div class="performance-container" id="new-mexico-container"></div>
+  <div class="collector-box">
+    <h2>Collector Issues</h2>
+    <div id="collector-issues-content-nm">Loading...</div>
+  </div>
+
+  <div class="region-header">North Carolina</div>
+  <div class="performance-container" id="north-carolina-container"></div>
+  <div class="collector-box">
+    <h2>Collector Issues</h2>
+    <div id="collector-issues-content-nc">Loading...</div>
+  </div>
+
+  <div class="region-header">Oregon</div>
+  <div class="performance-container" id="oregon-container"></div>
+  <div class="collector-box">
+    <h2>Collector Issues</h2>
+    <div id="collector-issues-content-or">Loading...</div>
+  </div>
+
+  <div class="region-header">South Carolina</div>
+  <div class="performance-container" id="south-carolina-container"></div>
+  <div class="collector-box">
+    <h2>Collector Issues</h2>
+    <div id="collector-issues-content-sc">Loading...</div>
+  </div>
+
+<!-- Scripts -->
+
+<script>
+async function fetchChartData() {
+  document.getElementById('louisiana-container').innerHTML = '';
+  document.getElementById('mississippi-container').innerHTML = '';
+  document.getElementById('florida-container').innerHTML = '';
+  document.getElementById('new-mexico-container').innerHTML = '';
+  document.getElementById('north-carolina-container').innerHTML = '';
+  document.getElementById('oregon-container').innerHTML = '';
+  document.getElementById('south-carolina-container').innerHTML = '';
+
+  const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=0&single=true&output=csv");
+  const text = await response.text();
+  const allRows = text.trim().split('\n');
+  const headers = allRows[0].split(',');
+  const rows = allRows.slice(1).map(row => {
+    const cols = row.split(',');
+    const state = cols[headers.indexOf('State')]?.trim();
+    const city = cols[headers.indexOf('City')]?.trim();
+    const performance = parseFloat(cols[headers.indexOf('Performance (%)')]?.trim()) || 0;
+    const total = parseInt(cols[headers.indexOf('Total Meters')]?.trim()) || 0;
+    const missing = parseInt(cols[headers.indexOf('Meters with Missing Reads')]?.trim()) || 0;
+
+    return { state, city, performance, total, missing };
+  }).filter(row => row.state && row.city && !isNaN(row.performance));
+
+  window.cityLookup = {};
+
+  rows.forEach(row => {
+    window.cityLookup[row.city.toLowerCase()] = {
+      city: row.city,
+      state: row.state,
+      performance: row.performance,
+      total: row.total,
+      missing: row.missing
+    };
+    const div = document.createElement('div');
+    div.className = 'city-card';
+    if (citiesWithIssues.has(row.city)) {
+      div.style.backgroundColor = '#ffdddd';
+    }
+    div.onclick = () => showCityInfo(row.city);
+    div.innerHTML = `<div><strong style="font-size: 1.4em;">${row.city}</strong><br><span style="font-weight:bold; display:block; margin-top: 4px;">${row.performance.toFixed(2)}%</span><canvas id="${row.city.toLowerCase().replace(/\s+/g, '')}Chart" class="donut"></canvas>${citiesWithIssues.has(row.city) ? '<div class="blinking-alert">⚠️</div>' : ''}</div>`;
+
+    const section = row.state === 'Louisiana' ? document.getElementById('louisiana-container')
+      : row.state === 'Mississippi' ? document.getElementById('mississippi-container')
+      : row.state === 'Florida' ? document.getElementById('florida-container')
+      : row.state === 'New Mexico' ? document.getElementById('new-mexico-container')
+      : row.state === 'North Carolina' ? document.getElementById('north-carolina-container')
+      : row.state === 'Oregon' ? document.getElementById('oregon-container')
+      : row.state === 'South Carolina' ? document.getElementById('south-carolina-container')
+      : null;
+
+    if (section) section.appendChild(div);
+
+    const canvas = document.getElementById(`${row.city.toLowerCase().replace(/\s+/g, '')}Chart`);
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          datasets: [{
+            data: [row.performance, 100 - row.performance],
+            backgroundColor: ['#2c5782', '#ffa500'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          cutout: '50%',
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false }
+          }
+        }
+      });
+    }
+  });
+}
+</script>
+
+
+<script>
+async function fetchReportDates() {
+  try {
+    const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=0&single=true&output=csv");
+    const text = await response.text();
+    const rows = text.trim().split('\n').map(r => r.split(',').map(c => c.trim()));
+    const headers = rows[0];
+    const reportDateIndex = headers.findIndex(h => h.toLowerCase() === 'report date');
+    const startDateIndex = headers.findIndex(h => h.toLowerCase() === 'start date');
+    const endDateIndex = headers.findIndex(h => h.toLowerCase() === 'end date');
+
+    if (reportDateIndex === -1 || startDateIndex === -1 || endDateIndex === -1) {
+      throw new Error("Headers not found");
+    }
+
+    const row = rows[1];
+    const reportDate = new Date(row[reportDateIndex]);
+    const startDate = new Date(row[startDateIndex]);
+    const endDate = new Date(row[endDateIndex]);
+
+    document.getElementById('report-date').textContent = reportDate.toLocaleDateString('en-US');
+    document.getElementById('start-date').textContent = startDate.toLocaleDateString('en-US');
+    document.getElementById('end-date').textContent = endDate.toLocaleDateString('en-US');
+  } catch (err) {
+    console.error(err);
+    document.getElementById('report-dates-box').innerHTML = '<strong>Unable to load report dates from sheet.</strong>';
+  }
+}
+
+fetchReportDates();
+</script>
+
+
+<script>
+const stateConfig = {
+  'la': {
+    name: 'Louisiana',
+    cities: ['Hessmer', 'Lake Charles', 'Shreveport'],
+    elementId: 'collector-issues-content-la',
+    sheet: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=941359224&single=true&output=csv'
+  },
+  'ms': {
+    name: 'Mississippi',
+    cities: ['Jackson', 'Okolona'],
+    elementId: 'collector-issues-content-ms',
+    sheet: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=521732964&single=true&output=csv'
+  },
+  'fl': {
+    name: 'Florida',
+    cities: ['Sunnlake'],
+    elementId: 'collector-issues-content-fl',
+    sheet: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=1039143457&single=true&output=csv'
+  },
+  'nm': {
+    name: 'New Mexico',
+    cities: ['Roosevelt County', 'Jal', 'Angel Fire'],
+    elementId: 'collector-issues-content-nm',
+    sheet: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=179000959&single=true&output=csv'
+  },
+  'nc': {
+    name: 'North Carolina',
+    cities: ['Salemburg'],
+    elementId: 'collector-issues-content-nc',
+    sheet: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=1242450237&single=true&output=csv'
+  },
+  'or': {
+    name: 'Oregon',
+    cities: ['Lakeview'],
+    elementId: 'collector-issues-content-or',
+    sheet: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=100773433&single=true&output=csv'
+  },
+  'sc': {
+    name: 'South Carolina',
+    cities: ['Estill'],
+    elementId: 'collector-issues-content-sc',
+    sheet: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=969914949&single=true&output=csv'
+  }
+};
+
+const citiesWithIssues = new Set();
+
+async function fetchStateIssues(config) {
+  console.log("🔍 Running fetchStateIssues for", config.name);
+  try {
+    const res = await fetch(config.sheet);
+    const text = await res.text();
+    const rows = text.trim().split('\n').map(r => r.split(','));
+    const headers = rows[0];
+    const data = rows.slice(1).map(row => {
+      const obj = {};
+      headers.forEach((h, i) => obj[h.trim()] = row[i]?.trim() || '');
+      return obj;
+    });
+
+    if (config.name === "Louisiana") {
+      console.log("🟡 Raw cities in sheet:", [...new Set(data.map(d => d.City))]);
+      console.log("🟠 Louisiana city list:", config.cities);
+    }
+
+    const issues = data.filter(e =>
+      e["Collector Issue"]?.trim().toLowerCase() === "yes" &&
+      config.cities.map(c => c.trim()).includes(e.City?.trim())
+    );
+    issues.forEach(e => citiesWithIssues.add(e.City));
+
+    const content = issues.length
+      ? issues.map(e =>
+          `<p><strong>${e.City}:</strong> ${e["Collector Name"]}, S/N: ${e["Serial Number"]}, Last Contact: ${e["Last Contact"]}, Comments: ${e.Comments}</p>`
+        ).join('')
+      : "<p>No collector issues reported.</p>";
+
+    document.getElementById(config.elementId).innerHTML = content;
+
+  } catch (err) {
+    console.error(`Error loading ${config.name}:`, err);
+    document.getElementById(config.elementId).innerHTML = "<p>Error loading data.</p>";
+  }
+}
+
+async function fetchCollectorIssues() {
+  console.log("✅ fetchCollectorIssues triggered");
+  const promises = Object.values(stateConfig).map(fetchStateIssues);
+  await Promise.all(promises);
+}
+fetchCollectorIssues().then(fetchChartData);
+</script>
+
+</body>
+</html>
