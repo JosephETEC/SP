@@ -107,7 +107,7 @@ function addMarker(lat, lon, popupHTML, isOnline) {
 
 map.on('load', () => {
   // First load collector status
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv&t=" + new Date().getTime(), {
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=0&single=true&output=csv&t=" + new Date().getTime(), {
     download: true,
     header: true,
     complete: function(collectorResults) {
