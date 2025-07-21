@@ -186,8 +186,8 @@
                 const displayName = row.City;
                 const link = row["Page Link"] || "#";
                 if (targetStates.includes(state) && !isNaN(lat) && !isNaN(lon)) {
-                  const status = row.Issues?.trim().toLowerCase() === "yes" ? "Offline" : "Online";
-                  addMarker(lat, lon, `<a href='${link}'>${displayName}</a><br>Status: ${status}`, row.Issues?.trim().toLowerCase() !== "yes", state);
+                  const status = row["Collector Issue"]?.trim().toLowerCase() === "yes" ? "Offline" : "Online";
+                  addMarker(lat, lon, `<a href='${link}'>${displayName}</a><br>Status: ${status}`, row["Collector Issue"]?.trim().toLowerCase() !== "yes", state);
                   validCount++;
                 }
               });
