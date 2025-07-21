@@ -312,7 +312,9 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       if (!bounds.isEmpty()) {
-        map.fitBounds(bounds, { padding: 100, maxZoom: 14 });
+        if (!bounds.isEmpty()) {
+        map.fitBounds(bounds, { padding: 100, maxZoom: 13 });
+      }
 
         if (!bounds.isEmpty()) {
           setTimeout(() => {
