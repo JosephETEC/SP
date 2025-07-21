@@ -1,189 +1,216 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
 
-<!DOCTYPE html>
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
 
-<html lang="en">
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html>
 <head>
-<meta charset="utf-8"/>
-<title>New Mexico Collector Map</title>
-<meta content="width=device-width, initial-scale=1" name="viewport"/>
-<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-<style>
-    body, html { margin: 0; padding: 0; height: 100%; }
-    #map { width: 100%; height: 100vh; }
+  <meta charset="utf-8"/>
+  <title>SP - Kamstrup System Overview</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    body, html { margin: 0; padding: 0; height: 100%; overflow-x: hidden; position: relative; }
+    #map {
+       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            width: 100%;
+      height: calc(100vh - 80px);
+      margin-top: 0;
+      position: absolute;
+      top: 80px;
+      left: 0;
+      z-index: 1;
+    }
     .mapboxgl-marker {
       border-radius: 50%;
       border: 2px solid white;
       width: 20px;
       height: 20px;
+      z-index: 10;
     }
     .marker.green { background-color: #10b981; }
     .marker.red { background-color: #e11d48; }
+    header {
+      background-color: #2c5782;
+      color: white;
+      padding: 15px 20px;
+      text-align: center;
+      position: fixed;
+      width: 100%;
+      z-index: 1001;
+      top: 0;
+      height: 80px;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .hamburger {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      cursor: pointer;
+      z-index: 1002;
+    }
+    .hamburger div {
+      width: 25px;
+      height: 3px;
+      background-color: white;
+      margin: 5px 0;
+      transition: all 0.3s ease;
+    }
+    .menu-open .hamburger div:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .menu-open .hamburger div:nth-child(2) { opacity: 0; }
+    .menu-open .hamburger div:nth-child(3) { transform: rotate(-45deg) translate(6px, -6px); }
+    .menu {
+      position: fixed;
+      top: 0;
+      left: -250px;
+      width: 250px;
+      height: 100%;
+      background-color: #2c5782;
+      padding-top: 80px;
+      transition: left 0.3s ease;
+      z-index: 1000;
+    }
+    .menu-open .menu { left: 0; }
+    .menu a {
+      display: block;
+      color: white;
+      padding: 15px 20px;
+      text-decoration: none;
+      font-size: 16px;
+    }
+    .menu a:hover { background-color: #1a3a5e; }
   </style>
 </head>
 <body>
-<style>
-/* Responsive Navigation */
-.navbar {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  background-color: #2c5782;
-  padding: 10px 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-.navbar a {
-  color: white;
-  text-decoration: none;
-  font-weight: 500;
-  margin: 5px 10px;
-}
-.navbar-toggle {
-  display: none;
-  flex-direction: column;
-  cursor: pointer;
-}
-.navbar-toggle span {
-  background: white;
-  height: 3px;
-  margin: 4px 0;
-  width: 25px;
-}
-.navbar-links {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  width: 100%;
-}
-@media (max-width: 768px) {
-  .navbar-links {
-    display: none;
-    flex-direction: column;
-    width: 100%;
-  }
-  .navbar-links.active {
-    display: flex;
-  }
-  .navbar-toggle {
-    display: flex;
-    margin-left: auto;
-  }
-}
-</style>
-<nav class="navbar">
-<div class="navbar-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('active')">
-<span></span><span></span><span></span>
-</div>
-<div class="navbar-links" id="dynamic-nav">
-<!-- Links will be populated by JS -->
-</div>
-</nav>
-
-
-<div id="map"></div><div style="text-align:center; margin: 20px;"><a href="index.html" style="display:inline-block; padding:10px 20px; background:#2c5782; color:white; text-decoration:none; border-radius:5px;">← Back to Kamstrup Health Report</a></div>
-<script>mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWF5ZG0wcTYwODJmMmxwdDI1MjNxenVlIn0.DPzjMzumd_bBfVS0Rqs3Xw';
-
-const map = new mapboxgl.Map({
-  container: 'map',
-  style: 'mapbox://styles/mapbox/streets-v12',
-  center: [-92.1, 31.2],
-  zoom: 1.5
-});
-
-const bounds = new mapboxgl.LngLatBounds();
-let markers = [];
-
-function addMarker(lat, lon, popupHTML, isOnline) {
-  const el = document.createElement('div');
-  el.className = 'marker ' + (isOnline ? 'green' : 'red');
-  new mapboxgl.Marker(el)
-    .setLngLat([lon, lat])
-    .setPopup(new mapboxgl.Popup().setHTML(popupHTML))
-    .addTo(map);
-  bounds.extend([lon, lat]);
-}
-
-map.on('load', () => {
-  // First load collector status
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=0&single=true&output=csv&t=" + new Date().getTime(), {
-    download: true,
-    header: true,
-    complete: function(collectorResults) {
-      const collectorData = collectorResults.data;
-
-      // Then load location and nav pin data
-      Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vSV38dO4UHsnXyLVAho45wIjgyoQXI3geoEmhKeyU_OFLbRu3PQi1s9SOtKRvQPSMFTxrjL0obEQqBZ/pub?gid=0&single=true&output=csv&t=" + new Date().getTime(), {
+  <div class="hamburger">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+  <header>
+    <h1>New Mexico System Overview</h1>
+  </header>
+  <div class="menu">
+    <a href="louisiana.html">Louisiana</a>
+    <a href="mississippi.html">Mississippi</a>
+    <a href="south-carolina.html">South Carolina</a>
+    <a href="north-carolina.html">North Carolina</a>
+    <a href="new-mexico.html">New Mexico</a>
+    <a href="florida.html">Florida</a>
+    <a href="oregon.html">Oregon</a>
+    <a href="/" id="health-report">Kamstrup Health Report</a>
+  </div>
+  <div id="map"></div>
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWF5ZG0wcTYwODJmMmxwdDI1MjNxenVlIn0.DPzjMzumd_bBfVS0Rqs3Xw';
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [-98.5, 39.5],
+      zoom: 3
+    });
+    const bounds = new mapboxgl.LngLatBounds();
+    const markers = [];
+    function addMarker(lat, lon, popupHTML, isOnline, state) {
+      const el = document.createElement('div');
+      el.className = 'marker ' + (isOnline ? 'green' : 'red');
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat([lon, lat])
+        .setPopup(new mapboxgl.Popup().setHTML(popupHTML))
+        .addTo(map);
+      markers.push({ marker, state });
+      bounds.extend([lon, lat]);
+    }
+    map.on('load', () => {
+      Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=941359224&single=true&output=csv", {
         download: true,
         header: true,
-        complete: function(locationResults) {
-          const locations = locationResults.data;
-          let hasValid = false;
-
-          locations.forEach(row => {
-            const lat = parseFloat(row.Latitude);
-            const lon = parseFloat(row.Longitude);
-            const name = row["Display Name"];
-            const link = row["Page Link"];
-            const city = row.City?.trim().toLowerCase();
-
-            const matching = collectorData.filter(c =>
-              c["City"]?.trim().toLowerCase() === city &&
-              c["Collector Issue"] !== undefined
-            );
-            const hasIssue = matching.some(m => m["Collector Issue"]?.trim().toLowerCase() === "yes");
-
-            if (!isNaN(lat) && !isNaN(lon)) {
-              const status = hasIssue ? "Offline" : "Online";
-              addMarker(lat, lon, `<a href='${link}'>${name}</a><br>Status: ${status}`, !hasIssue);
-              hasValid = true;
+        complete: function(collectorResults) {
+          const collectorData = collectorResults.data;
+          Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=0&single=true&output=csv", {
+            download: true,
+            header: true,
+            complete: function(locationResults) {
+              const locations = locationResults.data;
+              let validCount = 0;
+              const targetStates = ['New Mexico'];
+              locations.forEach(row => {
+                const state = row.State?.trim();
+                const lat = parseFloat(row.Latitude);
+                const lon = parseFloat(row.Longitude);
+                const city = row.City?.trim().toLowerCase();
+                const displayName = row.City;
+                const link = row["Page Link"] || "#";
+                if (targetStates.includes(state) && !isNaN(lat) && !isNaN(lon)) {
+                  const status = row.Issues?.trim().toLowerCase() === "yes" ? "Offline" : "Online";
+                  addMarker(lat, lon, `<a href='${link}'>${displayName}</a><br>Status: ${status}`, row.Issues?.trim().toLowerCase() !== "yes", state);
+                  validCount++;
+                }
+              });
+              if (validCount > 0) {
+                map.fitBounds(bounds, { padding: 100 });
+              } else {
+                alert("No valid city markers found.");
+              }
+              // Toggle menu
+              document.querySelector('.hamburger').addEventListener('click', () => {
+                document.body.classList.toggle('menu-open');
+              });
+              // Health report redirect
+              document.getElementById('health-report').addEventListener('click', (e) => {
+                window.location.href = '/';
+              });
             }
           });
-
-          if (hasValid) {
-            map.fitBounds(bounds, { padding: { top: 100, bottom: 200, left: 100, right: 100 } });
-
-            setTimeout(() => {
-              map.flyTo({
-                center: bounds.getCenter(),
-                zoom: 6.4,
-                speed: 0.5,
-                curve: 1.5,
-                easing: (t) => t
-              });
-            }, 1000);
-
-          }
         }
       });
-    }
-  });
-});</script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vSV38dO4UHsnXyLVAho45wIjgyoQXI3geoEmhKeyU_OFLbRu3PQi1s9SOtKRvQPSMFTxrjL0obEQqBZ/pub?gid=0&single=true&output=csv&t=" + new Date().getTime(), {
-    download: true,
-    header: true,
-    complete: function(results) {
-      const nav = document.getElementById('dynamic-nav');
-      const cities = results.data;
-      const added = new Set();
-
-      cities.forEach(row => {
-        const city = row.City?.trim();
-        const link = row["Page Link"]?.trim();
-        if (city && link && !added.has(city.toLowerCase())) {
-          const a = document.createElement('a');
-          a.href = link;
-          a.textContent = city;
-          a.style = "color: white; text-decoration: none; font-weight: 500;";
-          nav.appendChild(a);
-          added.add(city.toLowerCase());
-        }
-      });
-    }
-  });
-});
-</script></body>
+    });
+  </script>
+</body>
 </html>
