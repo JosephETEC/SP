@@ -1,35 +1,100 @@
 
 <!DOCTYPE html>
-<html>
+
+<html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <title>Mississippi Collector Map</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
-  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <style>
+<meta charset="utf-8"/>
+<title>Mississippi Collector Map</title>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
     body, html { margin: 0; padding: 0; height: 100%; }
     #map { width: 100%; height: 100vh; }
-    .mapboxgl-marker { border-radius: 50%; border: 2px solid white; width: 20px; height: 20px; }
+    .mapboxgl-marker {
+      border-radius: 50%;
+      border: 2px solid white;
+      width: 20px;
+      height: 20px;
+    }
     .marker.green { background-color: #10b981; }
     .marker.red { background-color: #e11d48; }
   </style>
 </head>
 <body>
-<header style="background-color: #2c5782; color: white; padding: 12px 20px; text-align: center;">
-  <h1>Kamstrup Health Report - Mississippi</h1>
-</header>
-<div id="map"></div>
-<script>
-mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWF5ZG0wcTYwODJmMmxwdDI1MjNxenVlIn0.DPzjMzumd_bBfVS0Rqs3Xw';
+<style>
+/* Responsive Navigation */
+.navbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  background-color: #2c5782;
+  padding: 10px 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.navbar a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  margin: 5px 10px;
+}
+.navbar-toggle {
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+}
+.navbar-toggle span {
+  background: white;
+  height: 3px;
+  margin: 4px 0;
+  width: 25px;
+}
+.navbar-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+@media (max-width: 768px) {
+  .navbar-links {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+  }
+  .navbar-links.active {
+    display: flex;
+  }
+  .navbar-toggle {
+    display: flex;
+    margin-left: auto;
+  }
+}
+</style>
+<nav class="navbar">
+<div class="navbar-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('active')">
+<span></span><span></span><span></span>
+</div>
+<div class="navbar-links" id="dynamic-nav">
+<!-- Links will be populated by JS -->
+</div>
+</nav>
+
+
+<div id="map"></div><div style="text-align:center; margin: 20px;"><a href="index.html" style="display:inline-block; padding:10px 20px; background:#2c5782; color:white; text-decoration:none; border-radius:5px;">← Back to Kamstrup Health Report</a></div>
+<script>mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWF5ZG0wcTYwODJmMmxwdDI1MjNxenVlIn0.DPzjMzumd_bBfVS0Rqs3Xw';
+
 const map = new mapboxgl.Map({
   container: 'map',
   style: 'mapbox://styles/mapbox/streets-v12',
-  center: [-89.6, 32.4],
+  center: [-92.1, 31.2],
   zoom: 1.5
 });
+
 const bounds = new mapboxgl.LngLatBounds();
+let markers = [];
+
 function addMarker(lat, lon, popupHTML, isOnline) {
   const el = document.createElement('div');
   el.className = 'marker ' + (isOnline ? 'green' : 'red');
@@ -39,39 +104,86 @@ function addMarker(lat, lon, popupHTML, isOnline) {
     .addTo(map);
   bounds.extend([lon, lat]);
 }
+
 map.on('load', () => {
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
+  // First load collector status
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv&t=" + new Date().getTime(), {
     download: true,
     header: true,
     complete: function(collectorResults) {
       const collectorData = collectorResults.data;
-      Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=0&single=true&output=csv", {
+
+      // Then load location and nav pin data
+      Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vSV38dO4UHsnXyLVAho45wIjgyoQXI3geoEmhKeyU_OFLbRu3PQi1s9SOtKRvQPSMFTxrjL0obEQqBZ/pub?gid=0&single=true&output=csv&t=" + new Date().getTime(), {
         download: true,
         header: true,
         complete: function(locationResults) {
           const locations = locationResults.data;
+          let hasValid = false;
+
           locations.forEach(row => {
             const lat = parseFloat(row.Latitude);
             const lon = parseFloat(row.Longitude);
+            const name = row["Display Name"];
+            const link = row["Page Link"];
             const city = row.City?.trim().toLowerCase();
-            const state = row.State?.trim().toLowerCase();
-            const displayName = row.City;
-            const link = row["Page Link"] || "#";
+
             const matching = collectorData.filter(c =>
-              c["City"]?.trim().toLowerCase() === city && c["Collector Issue"] !== undefined
+              c["City"]?.trim().toLowerCase() === city &&
+              c["Collector Issue"] !== undefined
             );
             const hasIssue = matching.some(m => m["Collector Issue"]?.trim().toLowerCase() === "yes");
-            if (!isNaN(lat) && !isNaN(lon) && state === "mississippi") {
+
+            if (!isNaN(lat) && !isNaN(lon)) {
               const status = hasIssue ? "Offline" : "Online";
-              addMarker(lat, lon, `<a href='${link}'>${displayName}</a><br>Status: ${status}`, !hasIssue);
+              addMarker(lat, lon, `<a href='${link}'>${name}</a><br>Status: ${status}`, !hasIssue);
+              hasValid = true;
             }
           });
-          map.fitBounds(bounds, { padding: 100 });
+
+          if (hasValid) {
+            map.fitBounds(bounds, { padding: { top: 100, bottom: 200, left: 100, right: 100 } });
+
+            setTimeout(() => {
+              map.flyTo({
+                center: bounds.getCenter(),
+                zoom: 6.4,
+                speed: 0.5,
+                curve: 1.5,
+                easing: (t) => t
+              });
+            }, 1000);
+
+          }
+        }
+      });
+    }
+  });
+});</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vSV38dO4UHsnXyLVAho45wIjgyoQXI3geoEmhKeyU_OFLbRu3PQi1s9SOtKRvQPSMFTxrjL0obEQqBZ/pub?gid=0&single=true&output=csv&t=" + new Date().getTime(), {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const nav = document.getElementById('dynamic-nav');
+      const cities = results.data;
+      const added = new Set();
+
+      cities.forEach(row => {
+        const city = row.City?.trim();
+        const link = row["Page Link"]?.trim();
+        if (city && link && !added.has(city.toLowerCase())) {
+          const a = document.createElement('a');
+          a.href = link;
+          a.textContent = city;
+          a.style = "color: white; text-decoration: none; font-weight: 500;";
+          nav.appendChild(a);
+          added.add(city.toLowerCase());
         }
       });
     }
   });
 });
-</script>
-</body>
+</script></body>
 </html>
