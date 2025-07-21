@@ -421,9 +421,10 @@ fetchCollectorIssues().then(fetchChartData);
 
 
 <div id="city-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;">
-  <div style="background:white; padding:30px; border-radius:12px; max-width:400px; text-align:left; position:relative;">
+  <div style="background:white; padding:30px; border-radius:24px; max-width:360px; text-align:center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #2c5782; position:relative;">
     <span style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:20px;" onclick="closeCityModal()">×</span>
     <div id="city-modal-content"></div>
+    <button onclick="closeCityModal()" style="margin-top:20px; padding:10px 20px; background-color:#e0f3ff; border:2px solid #2c5782; border-radius:8px; font-weight:bold; color:#2c5782;">Close</button>
   </div>
 </div>
 
@@ -433,10 +434,10 @@ function showCityInfo(cityName) {
   if (!city) return;
 
   const html = `
-    <h2>${city.city}, ${city.state}</h2>
-    <p><strong>Performance:</strong> ${city.performance.toFixed(2)}%</p>
-    <p><strong>Total Meters:</strong> ${city.total}</p>
-    <p><strong>Missing Reads:</strong> ${city.missing}</p>
+    <h2 style="font-size: 1.8em; margin-bottom: 20px;"><strong>${city.city}</strong></h2>
+    <p style="font-size: 1.2em;"><strong>Reading Performance:</strong><br>${city.performance.toFixed(2)}%</p>
+    <p style="font-size: 1.2em;"><strong>Total Meters:</strong><br>${city.total}</p>
+    <p style="font-size: 1.2em;"><strong>Missing Reads:</strong><br>${city.missing}</p>
   `;
   document.getElementById("city-modal-content").innerHTML = html;
   document.getElementById("city-modal").style.display = "flex";
