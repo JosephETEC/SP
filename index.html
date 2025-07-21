@@ -419,5 +419,33 @@ async function fetchCollectorIssues() {
 fetchCollectorIssues().then(fetchChartData);
 </script>
 
+
+<div id="city-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;">
+  <div style="background:white; padding:30px; border-radius:12px; max-width:400px; text-align:left; position:relative;">
+    <span style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:20px;" onclick="closeCityModal()">×</span>
+    <div id="city-modal-content"></div>
+  </div>
+</div>
+
+<script>
+function showCityInfo(cityName) {
+  const city = cityLookup[cityName.toLowerCase()];
+  if (!city) return;
+
+  const html = `
+    <h2>${city.city}, ${city.state}</h2>
+    <p><strong>Performance:</strong> ${city.performance.toFixed(2)}%</p>
+    <p><strong>Total Meters:</strong> ${city.total}</p>
+    <p><strong>Missing Reads:</strong> ${city.missing}</p>
+  `;
+  document.getElementById("city-modal-content").innerHTML = html;
+  document.getElementById("city-modal").style.display = "flex";
+}
+
+function closeCityModal() {
+  document.getElementById("city-modal").style.display = "none";
+}
+</script>
+
 </body>
 </html>
