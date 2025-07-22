@@ -168,8 +168,6 @@
       bounds.extend([lon, lat]);
     }
     map.on('load', () => {
-  map.setCenter([-92.3, 31.0]);
-  map.setZoom(6.5);
       Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vR7d9gYwltd4cxBZGHMg7xD-bwlJ382dxdVtMpwJ-lJ6y-bsUW4pCU4TsGBm_UGonVF64dp7sl7Xxuf/pub?gid=941359224&single=true&output=csv", {
         download: true,
         header: true,
@@ -195,8 +193,8 @@
                   validCount++;
                 }
               });
-              map.setCenter([-92.3, 31.0]);
-              map.setZoom(6.5);
+              if (validCount > 0) {
+                map.fitBounds(bounds, { padding: 100 });
               } else {
                 alert("No valid city markers found.");
               }
