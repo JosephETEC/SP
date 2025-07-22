@@ -193,8 +193,8 @@
                   validCount++;
                 }
               });
-              if (validCount > 0) {
-                map.fitBounds(bounds, { padding: 100 });
+              map.setCenter([-92.3, 31.0]);
+              map.setZoom(6.5);
               } else {
                 alert("No valid city markers found.");
               }
